@@ -1,6 +1,24 @@
 import { useEffect } from 'react'
 import { Game } from './components/Game'
+import { useGameStore } from './stores/gameStore'
 import './styles/game.css'
+
+// Dev-only bridge for automated testing (enabled via ?debug=1, harmless in prod)
+if (new URLSearchParams(window.location.search).has('debug')) {
+  ;(window as any).__dz = {
+    store: useGameStore,
+    getState: () => useGameStore.getState(),
+  }
+  // Expose THREE for debug raycasts
+  import('three').then((m) => {
+    ;(window as any).__dz.THREE = m
+  })
+  // Expose collider registry for debugging
+  import('./components/environment/collision').then((m) => {
+    ;(window as any).__dz.colliders = () =>
+      m.colliders.map((c) => ({ minX: c.minX, maxX: c.maxX, minZ: c.minZ, maxZ: c.maxZ, active: c.active }))
+  })
+}
 
 function App() {
   // Request pointer lock on canvas click

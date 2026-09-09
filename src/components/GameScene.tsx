@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber';
+import { useRef } from 'react';
 import { Player } from '../components/player/Player';
 import { EnemyManager } from '../components/enemy/EnemyManager';
-import { Level } from '../components/environment/Level';
+import { Level, levelConfigs } from '../components/environment/Level';
 import { Flashlight } from '../components/player/Flashlight';
 import { WeaponSystem } from '../components/weapon/WeaponSystem';
 import { AudioManager } from '../components/AudioManager';
@@ -17,9 +18,23 @@ export function GameScene() {
   const setPlayerRotation = useGameStore((s) => s.setPlayerRotation);
 
   // Sync player position/rotation to store
+  const camInit = useRef<string | null>(null);
   useFrame((state) => {
     if (gameState !== 'playing') return;
     const camera = state.camera;
+    // On level start, place the camera at the level's spawn point
+    if (camInit.current !== currentLevel) {
+      const cfg = levelConfigs[currentLevel] || levelConfigs.hospital;
+      camera.position.set(cfg.spawnPoint[0], cfg.spawnPoint[1], cfg.spawnPoint[2]);
+      camera.rotation.set(0, 0, 0);
+      camInit.current = currentLevel;
+    }
+    // Expose camera to debug bridge for automated testing
+    if ((window as any).__dz) {
+      (window as any).__dz.camera = camera;
+      (window as any).__dz.scene = state.scene;
+      (window as any).__dz.gl = state.gl;
+    }
     setPlayerPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
     setPlayerRotation({ x: camera.rotation.x, y: camera.rotation.y, z: camera.rotation.z });
   }, 1); // Run once per frame but low priority

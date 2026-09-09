@@ -1,10 +1,25 @@
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, createPortal } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useGameStore } from '../../stores/gameStore';
+import { emitNoise } from '../enemy/Enemy';
+import { dzSound } from '../AudioManager';
 import type { WeaponType, WeaponConfig } from '../../types/game';
 
-const weaponConfigs: Record<WeaponType, WeaponConfig> = {
+/** Walk up the object ancestry to find a node exposing userData.takeDamage */
+function findEnemyParent(obj: THREE.Object3D | null): (THREE.Object3D & { userData: { takeDamage: (d: number, s?: number) => void } }) | null {
+  let cur: THREE.Object3D | null = obj;
+  while (cur) {
+    const ud = cur.userData as { takeDamage?: (d: number, s?: number) => void };
+    if (typeof ud.takeDamage === 'function') {
+      return cur as THREE.Object3D & { userData: { takeDamage: (d: number, s?: number) => void } };
+    }
+    cur = cur.parent;
+  }
+  return null;
+}
+
+export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   stunGun: {
     type: 'stunGun',
     name: '电击枪',
@@ -111,35 +126,37 @@ const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
 };
 
+const HIP_SPREAD = 0.008;  // radians — hip-fire spread
+const ADS_SPREAD = 0.0015; // radians — aimed spread
+
 export function WeaponSystem() {
   const { camera, scene, raycaster, gl } = useThree();
   const gameState = useGameStore((s) => s.gameState);
   const currentWeapon = useGameStore((s) => s.currentWeapon);
-  const weapons = useGameStore((s) => s.weapons);
   const ammo = useGameStore((s) => s.ammo);
   const useAmmo = useGameStore((s) => s.useAmmo);
-  const addWeapon = useGameStore((s) => s.addWeapon);
   const setCurrentWeapon = useGameStore((s) => s.setCurrentWeapon);
+  const setHitMarker = useGameStore((s) => s.setHitMarker);
+  const setAiming = useGameStore((s) => s.setAiming);
+  const setReloadProgress = useGameStore((s) => s.setReloadProgress);
 
   const weaponRef = useRef<THREE.Group | null>(null);
   const muzzleFlashRef = useRef<THREE.PointLight | null>(null);
+  const muzzleMeshRef = useRef<THREE.Mesh | null>(null);
   const lastFireTime = useRef(0);
   const isFiring = useRef(false);
   const isReloading = useRef(false);
   const reloadTimer = useRef(0);
+  const aiming = useRef(false);
+  const fov = useRef(75);
   const recoilRef = useRef({ x: 0, y: 0 });
   const targetRecoilRef = useRef({ x: 0, y: 0 });
 
   const config = weaponConfigs[currentWeapon];
-  // Model loading is deferred until GLB assets are added — using placeholder geometry
-  const weaponScene = null;
-  const animations: unknown[] = [];
 
-  // Placeholder weapon body (real GLB model replaces this when assets are available)
-
-  // Muzzle flash light
+  // Muzzle flash light + mesh
   useEffect(() => {
-    const light = new THREE.PointLight(0xffee88, 0, 5, 2);
+    const light = new THREE.PointLight(0xffee88, 0, 6, 2);
     light.visible = false;
     muzzleFlashRef.current = light;
     camera.add(light);
@@ -149,213 +166,215 @@ export function WeaponSystem() {
   // Input handling
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 0 && gameState === 'playing') {
-        isFiring.current = true;
-      }
+      if (gameState !== 'playing') return;
+      if (e.button === 0) isFiring.current = true;
+      if (e.button === 2) { aiming.current = true; setAiming(true); }
     };
-    
-    const onMouseUp = () => {
-      isFiring.current = false;
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 0) isFiring.current = false;
+      if (e.button === 2) { aiming.current = false; setAiming(false); }
     };
-    
     const onKeyDown = (e: KeyboardEvent) => {
       if (gameState !== 'playing') return;
-      
-      // Weapon switching
       if (e.code === 'Digit1') setCurrentWeapon('stunGun');
       if (e.code === 'Digit2') setCurrentWeapon('pistol');
       if (e.code === 'Digit3') setCurrentWeapon('shotgun');
       if (e.code === 'Digit4') setCurrentWeapon('energyGun');
       if (e.code === 'KeyQ') setCurrentWeapon('knife');
-      
-      // Reload
-      if (e.code === 'KeyR') {
-        reload();
-      }
-      
-      // Melee attack
-      if (e.code === 'MouseLeft' || e.code === 'Mouse0') {
-        isFiring.current = true;
-      }
+      if (e.code === 'KeyR') reload();
     };
-    
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'MouseLeft' || e.code === 'Mouse0') {
-        isFiring.current = false;
-      }
-    };
-
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-
     return () => {
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
+      setAiming(false);
     };
-  }, [gameState, setCurrentWeapon, currentWeapon]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, setCurrentWeapon, setAiming]);
 
-  // Firing logic
+  // Fire logic
   const fire = () => {
     const cfg = weaponConfigs[currentWeapon];
     const now = performance.now() / 1000;
-    
+
     if (isReloading.current) return;
-    if (!useAmmo(currentWeapon, 1)) return; // No ammo
     if (now - lastFireTime.current < cfg.fireRate) return;
-    
-    lastFireTime.current = now;
-    
-    // Recoil
-    const recoilStrength = cfg.isMelee ? 0.02 : 0.05;
-    targetRecoilRef.current.x = -recoilStrength * (Math.random() * 0.5 + 0.5);
-    targetRecoilRef.current.y = (Math.random() - 0.5) * recoilStrength * 0.5;
-    
-    // Muzzle flash
-    if (muzzleFlashRef.current && !cfg.isMelee) {
-      muzzleFlashRef.current.visible = true;
-      muzzleFlashRef.current.intensity = 5;
-      setTimeout(() => {
-        if (muzzleFlashRef.current) {
-          muzzleFlashRef.current.visible = false;
-        }
-      }, 50);
-    }
-    
-    // Raycast for hitscan weapons
+
+    // Melee doesn't consume ammo
     if (!cfg.isMelee) {
-      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-      raycaster.far = cfg.range;
-      const intersects = raycaster.intersectObjects(scene.children, true);
-      
-      if (intersects.length > 0) {
-        const hit = intersects[0];
-        // Hit effect
-        createHitEffect(hit.point, hit.normal);
-        
-        // Damage enemy
-        const enemy = hit.object.parent?.parent?.parent;
-        if (enemy && enemy.userData?.takeDamage) {
-          enemy.userData.takeDamage(cfg.damage, 0.3);
-        }
+      const currentAmmo = useGameStore.getState().ammo[currentWeapon];
+      if (currentAmmo <= 0) {
+        dzSound.dry();
+        // auto reload on empty
+        if (cfg.reloadTime > 0) reload();
+        return;
       }
-    } else {
-      // Melee attack - sphere cast
-      const meleeRange = cfg.range;
-      const sphere = new THREE.Sphere(new THREE.Vector3(), meleeRange);
-      // TODO: Implement proper melee hit detection
+      useAmmo(currentWeapon, 1);
     }
-    
-    // Play sound
-    playWeaponSound(currentWeapon);
+
+    lastFireTime.current = now;
+
+    // Recoil
+    const recoilStrength = cfg.isMelee ? 0.015 : aiming.current ? 0.03 : 0.05;
+    targetRecoilRef.current.x = -recoilStrength * (Math.random() * 0.5 + 0.5);
+    targetRecoilRef.current.y = (Math.random() - 0.5) * recoilStrength * 0.6;
+
+    // Muzzle flash
+    if (!cfg.isMelee) {
+      if (muzzleFlashRef.current) {
+        muzzleFlashRef.current.visible = true;
+        muzzleFlashRef.current.intensity = 6;
+      }
+      if (muzzleMeshRef.current) {
+        muzzleMeshRef.current.visible = true;
+        muzzleMeshRef.current.scale.setScalar(1);
+      }
+    }
+
+    // Noisy! gunfire alerts nearby enemies
+    const camPos = camera.position;
+    emitNoise(camPos.x, camPos.z, cfg.isMelee ? 4 : 30);
+
+    // Hit detection
+    const spread = aiming.current ? ADS_SPREAD : HIP_SPREAD;
+    const dir = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
+    dir.x += (Math.random() - 0.5) * spread;
+    dir.y += (Math.random() - 0.5) * spread;
+    dir.z += (Math.random() - 0.5) * spread * 0.5;
+    dir.normalize();
+
+    raycaster.set(camera.position, dir);
+    raycaster.far = cfg.range;
+    raycaster.near = 0.05;
+    // Exclude the weapon itself (child of camera) and spark particles from raycast
+    const targets = scene.children.filter((c) => c !== camera && !(c as THREE.Points).isPoints && c.userData?.isWeaponRoot !== true);
+    const intersects = raycaster.intersectObjects(targets, true);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0];
+      createHitEffect(hit.point, hit.normal || new THREE.Vector3(0, 1, 0));
+
+      const enemyObj = findEnemyParent(hit.object);
+      if (enemyObj) {
+        // stunGun is the tactical boss weapon — long stun per hit
+        const stun = cfg.type === 'stunGun' ? 1.2 : cfg.isMelee ? 0.15 : 0.25;
+        enemyObj.userData.takeDamage(cfg.damage, stun);
+        setHitMarker(Date.now());
+        dzSound.enemyHit();
+      } else {
+        dzSound.metal();
+      }
+    }
+
+    dzSound.fire(currentWeapon);
   };
 
   // Reload
   const reload = () => {
     const cfg = weaponConfigs[currentWeapon];
-    const currentAmmo = ammo[currentWeapon];
-    const maxAmmo = cfg.maxAmmo;
-    
-    if (currentAmmo >= maxAmmo || isReloading.current || cfg.isMelee) return;
-    
+    const currentAmmo = useGameStore.getState().ammo[currentWeapon];
+    if (currentAmmo >= cfg.maxAmmo || isReloading.current || cfg.isMelee) return;
     isReloading.current = true;
     reloadTimer.current = cfg.reloadTime;
-    
-    // Play reload animation/sound
-    playReloadSound(currentWeapon);
+    dzSound.reload();
   };
 
   // Update loop
   useFrame((_, delta) => {
     if (gameState !== 'playing') return;
-    
-    // Handle firing
-    if (isFiring.current) {
-      fire();
-    }
-    
-    // Handle reload
+
+    if (isFiring.current) fire();
+
     if (isReloading.current) {
       reloadTimer.current -= delta;
+      setReloadProgress(Math.max(0, Math.min(1, reloadTimer.current / config.reloadTime)));
       if (reloadTimer.current <= 0) {
         isReloading.current = false;
+        setReloadProgress(0);
         useGameStore.getState().reloadWeapon(currentWeapon);
+        dzSound.reload();
       }
+    } else if (useGameStore.getState().reloadProgress !== 0) {
+      setReloadProgress(0);
     }
-    
-    // Smooth recoil recovery
+
+    // ADS FOV lerp
+    const targetFov = aiming.current ? 60 : 75;
+    fov.current += (targetFov - fov.current) * delta * 10;
+    if (Math.abs(fov.current - targetFov) < 0.05) fov.current = targetFov;
+    (camera as unknown as THREE.PerspectiveCamera).fov = fov.current;
+    (camera as unknown as THREE.PerspectiveCamera).updateProjectionMatrix();
+
+    // Recoil recovery
     recoilRef.current.x += (targetRecoilRef.current.x - recoilRef.current.x) * delta * 15;
     recoilRef.current.y += (targetRecoilRef.current.y - recoilRef.current.y) * delta * 15;
     targetRecoilRef.current.x *= 0.9;
     targetRecoilRef.current.y *= 0.9;
-    
+
     // Apply recoil to camera
     if (camera) {
       camera.rotation.x += recoilRef.current.x;
       camera.rotation.y += recoilRef.current.y;
     }
-    
-    // Weapon sway/bob
+
+    // Weapon pose: ADS centers the gun; hip-fire holds it low-right
     if (weaponRef.current) {
       const time = performance.now() * 0.003;
-      weaponRef.current.rotation.z = Math.sin(time * 2) * 0.005;
-      weaponRef.current.position.x = 0.3 + Math.sin(time) * 0.01;
-      weaponRef.current.position.y = -0.3 + Math.cos(time * 1.5) * 0.01;
+      const aimK = aiming.current ? 1 : 0;
+      weaponRef.current.position.set(
+        0.3 - aimK * 0.3 + Math.sin(time) * 0.008 * (1 - aimK),
+        -0.3 + aimK * 0.3 + Math.cos(time * 1.5) * 0.008 * (1 - aimK),
+        -0.5 + aimK * 0.2
+      );
+      weaponRef.current.rotation.z = Math.sin(time * 2) * 0.005 * (1 - aimK);
+      weaponRef.current.rotation.x = 0;
+      // firing kick
+      const kick = targetRecoilRef.current.x < -0.02 ? 0.03 : 0;
+      weaponRef.current.position.z += kick;
     }
-    
-    // Hide muzzle flash after frame
+
+    // Muzzle flash decay
     if (muzzleFlashRef.current && muzzleFlashRef.current.visible) {
       muzzleFlashRef.current.intensity *= 0.5;
-      if (muzzleFlashRef.current.intensity < 0.5) {
-        muzzleFlashRef.current.visible = false;
-      }
+      if (muzzleFlashRef.current.intensity < 0.5) muzzleFlashRef.current.visible = false;
+    }
+    if (muzzleMeshRef.current && muzzleMeshRef.current.visible) {
+      muzzleMeshRef.current.scale.multiplyScalar(0.85);
+      if (muzzleMeshRef.current.scale.x < 0.2) muzzleMeshRef.current.visible = false;
     }
   });
 
-  // Create hit effect
+  // Spark particle hit effect
   const createHitEffect = (position: THREE.Vector3, normal: THREE.Vector3) => {
-    // Spark particles
     const geometry = new THREE.BufferGeometry();
     const count = 10;
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
-    
     for (let i = 0; i < count; i++) {
       positions[i * 3] = position.x;
       positions[i * 3 + 1] = position.y;
       positions[i * 3 + 2] = position.z;
-      
       const dir = normal.clone().add(new THREE.Vector3(
-        (Math.random() - 0.5) * 0.5,
-        (Math.random() - 0.5) * 0.5,
-        (Math.random() - 0.5) * 0.5
+        (Math.random() - 0.5) * 0.6,
+        (Math.random() - 0.5) * 0.6,
+        (Math.random() - 0.5) * 0.6
       )).normalize();
-      
       velocities[i * 3] = dir.x * (Math.random() * 5 + 2);
       velocities[i * 3 + 1] = dir.y * (Math.random() * 5 + 2);
       velocities[i * 3 + 2] = dir.z * (Math.random() * 5 + 2);
     }
-    
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
-    
     const material = new THREE.PointsMaterial({
-      color: 0xffee88,
-      size: 0.05,
-      transparent: true,
-      opacity: 1,
-      depthWrite: false,
+      color: 0xffee88, size: 0.05, transparent: true, opacity: 1, depthWrite: false,
     });
-    
     const particles = new THREE.Points(geometry, material);
     particles.userData = { velocities, life: 0.5 };
     scene.add(particles);
-    
-    // Animate particles
-    const animateParticles = (dt: number) => {
+    const animate = (dt: number) => {
       particles.userData.life -= dt;
       if (particles.userData.life <= 0) {
         scene.remove(particles);
@@ -363,92 +382,62 @@ export function WeaponSystem() {
         material.dispose();
         return;
       }
-      
       const posAttr = geometry.getAttribute('position');
       const vel = particles.userData.velocities;
-      
       for (let i = 0; i < count; i++) {
         posAttr.setX(i, posAttr.getX(i) + vel[i * 3] * dt);
         posAttr.setY(i, posAttr.getY(i) + vel[i * 3 + 1] * dt);
         posAttr.setZ(i, posAttr.getZ(i) + vel[i * 3 + 2] * dt);
-        
-        // Gravity
         vel[i * 3 + 1] -= 9.8 * dt;
       }
-      
       posAttr.needsUpdate = true;
       material.opacity = particles.userData.life * 2;
-      
-      requestAnimationFrame(() => animateParticles(1/60));
+      requestAnimationFrame(() => animate(1 / 60));
     };
-    
-    animateParticles(1/60);
+    animate(1 / 60);
   };
 
-  // Weapon sounds (placeholder - use Web Audio API)
-  const playWeaponSound = (weapon: WeaponType) => {
-    // TODO: Implement with AudioManager
-    console.log(`Fire: ${weapon}`);
-  };
-  
-  const playReloadSound = (weapon: WeaponType) => {
-    console.log(`Reload: ${weapon}`);
-  };
-
-  return (
-    <group ref={weaponRef} name="weapon" position={[0.3, -0.3, -0.5]} rotation={[0, Math.PI, 0]}>
-      {/* Placeholder weapon body */}
-      <mesh>
-        {config.isMelee ? (
-          <>
+  return createPortal(
+    <group ref={weaponRef} name="weapon" position={[0.3, -0.3, -0.5]} rotation={[0, Math.PI, 0]} userData={{ isWeaponRoot: true }}>
+      {/* Placeholder weapon body (replaced by GLB when assets available) */}
+      {config.isMelee ? (
+        <>
+          <mesh>
             <boxGeometry args={[0.05, 0.05, config.range * 0.8]} />
-            <meshStandardMaterial color={0x888888} roughness={0.3} metalness={0.7} />
-          </>
-        ) : (
-          <>
-            <boxGeometry args={[0.15, 0.1, 0.4]} />
-            <meshStandardMaterial color={0x333333} roughness={0.4} metalness={0.6} />
-          </>
-        )}
-      </mesh>
-      {/* Barrel indicator */}
-      {!config.isMelee && (
-        <mesh position={[0, 0, -0.25]}>
-          <cylinderGeometry args={[0.02, 0.02, 0.1, 8]} />
-          <meshBasicMaterial color={0xffee88} />
-        </mesh>
+            <meshStandardMaterial color={0x8899aa} roughness={0.3} metalness={0.7} />
+          </mesh>
+          <mesh position={[0, 0.04, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.02, 0.02, config.range * 0.8, 8]} />
+            <meshStandardMaterial color={0x223344} roughness={0.5} metalness={0.6} />
+          </mesh>
+        </>
+      ) : (
+        <>
+          {/* Gun body */}
+          <mesh>
+            <boxGeometry args={[0.14, 0.11, 0.42]} />
+            <meshStandardMaterial color={config.type === 'stunGun' ? 0x2255aa : 0x2a2a33} roughness={0.4} metalness={0.65} />
+          </mesh>
+          {/* Barrel */}
+          <mesh position={[0, 0, -0.28]}>
+            <cylinderGeometry args={[0.022, 0.022, 0.14, 8]} />
+            <meshStandardMaterial color={0x111118} roughness={0.3} metalness={0.9} />
+          </mesh>
+          {/* Muzzle flash quad */}
+          <mesh ref={muzzleMeshRef} position={[0, 0, -0.4]} rotation={[0, 0, 0]} visible={false}>
+            <planeGeometry args={[0.35, 0.35]} />
+            <meshBasicMaterial color={0xffdd66} toneMapped={false} transparent opacity={0.85} side={THREE.DoubleSide} />
+          </mesh>
+          {/* Stun gun glow */}
+          {config.type === 'stunGun' && (
+            <mesh position={[0, 0, -0.34]}>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshBasicMaterial color={0x44ddff} toneMapped={false} />
+            </mesh>
+          )}
+        </>
       )}
-    </group>
-  );
-}
-
-// Placeholder weapon for when models aren't loaded
-export function WeaponPlaceholder() {
-  const currentWeapon = useGameStore((s) => s.currentWeapon);
-  const config = weaponConfigs[currentWeapon];
-  
-  return (
-    <group name="weapon-placeholder" position={[0.3, -0.3, -0.5]} rotation={[0, Math.PI, 0]}>
-      <mesh>
-        {config.isMelee ? (
-          <>
-            <boxGeometry args={[0.05, 0.05, config.range * 0.8]} />
-            <meshStandardMaterial color={0x888888} roughness={0.3} metalness={0.7} />
-          </>
-        ) : (
-          <>
-            <boxGeometry args={[0.15, 0.1, 0.4]} />
-            <meshStandardMaterial color={0x333333} roughness={0.4} metalness={0.6} />
-          </>
-        )}
-      </mesh>
-      {/* Barrel indicator */}
-      {!config.isMelee && (
-        <mesh position={[0, 0, -0.25]}>
-          <cylinderGeometry args={[0.02, 0.02, 0.1, 8]} />
-          <meshBasicMaterial color={0xffee88} />
-        </mesh>
-      )}
-    </group>
+    </group>,
+    camera
   );
 }

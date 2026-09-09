@@ -64,6 +64,19 @@ interface GameStore {
   interactionPrompt: { title: string; description: string } | null;
   setInteractionPrompt: (prompt: { title: string; description: string } | null) => void;
 
+  // Combat feedback (HUD)
+  hitMarker: number; // timestamp of last enemy hit (0 = none)
+  setHitMarker: (t: number) => void;
+  isAiming: boolean;
+  setAiming: (a: boolean) => void;
+  reloadProgress: number; // 0..1 while reloading (0 = not reloading)
+  setReloadProgress: (p: number) => void;
+  bossActive: boolean;
+  bossHealth: number;
+  bossMaxHealth: number;
+  setBossActive: (active: boolean, health?: number, maxHealth?: number) => void;
+  setBossHealth: (health: number) => void;
+
   // Save/Load
   saveGame: () => SaveData;
   loadGame: (data: SaveData) => void;
@@ -90,6 +103,12 @@ const initialState = {
   completedObjectives: [] as string[],
   currentItem: null as ItemType | null,
   interactionPrompt: null as { title: string; description: string } | null,
+  hitMarker: 0,
+  isAiming: false,
+  reloadProgress: 0,
+  bossActive: false,
+  bossHealth: 0,
+  bossMaxHealth: 0,
   playerPosition: { x: 0, y: 1.6, z: 0 },
   playerRotation: { x: 0, y: 0, z: 0 },
 };
@@ -100,6 +119,7 @@ const itemWeights: Record<ItemType, number> = {
   medkit: 1,
   painkiller: 0.1,
   key: 0.1,
+  master_key: 0.1,
   keycard: 0.05,
   fuse: 0.3,
   map: 0.2,
@@ -254,6 +274,17 @@ export const useGameStore = create<GameStore>()(
       setPlayerRotation: (rot) => set({ playerRotation: rot }),
       setCurrentItem: (item) => set({ currentItem: item }),
       setInteractionPrompt: (prompt) => set({ interactionPrompt: prompt }),
+
+      // Combat feedback
+      setHitMarker: (t) => set({ hitMarker: t }),
+      setAiming: (a) => set({ isAiming: a }),
+      setReloadProgress: (p) => set({ reloadProgress: p }),
+      setBossActive: (active, health = 0, maxHealth = 0) => set({
+        bossActive: active,
+        bossHealth: health,
+        bossMaxHealth: maxHealth,
+      }),
+      setBossHealth: (health) => set({ bossHealth: health }),
 
       saveGame: () => {
         const state = get();

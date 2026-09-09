@@ -8,41 +8,75 @@ interface EnemySpawnData {
   position: [number, number, number];
   rotation: [number, number, number];
   patrolPoints?: [number, number, number][];
+  boss?: boolean;
 }
 
-// Enemy spawn data for hospital level
+// Enemy spawn data for hospital level — matches 4-zone layout:
+// Lobby → Emergency → Surgery → Underground Lab (Boss: Nurse-07)
 const hospitalEnemies: EnemySpawnData[] = [
+  // --- LOBBY (spawn area, z: -15..15) ---
   {
-    type: 'nurse',
-    position: [10, 1.6, -15],
-    rotation: [0, Math.PI, 0],
+    type: 'patient',
+    position: [-10, 1.0, -6],
+    rotation: [0, Math.PI / 2, 0],
     patrolPoints: [
-      [10, 1.6, -15],
-      [15, 1.6, -10],
-      [5, 1.6, -5],
-      [0, 1.6, -10],
-    ],
-  },
-  {
-    type: 'nurse',
-    position: [-10, 1.6, 15],
-    rotation: [0, 0, 0],
-    patrolPoints: [
-      [-10, 1.6, 15],
-      [-15, 1.6, 10],
-      [-5, 1.6, 5],
-      [0, 1.6, 10],
+      [-10, 1.6, -6],
+      [10, 1.6, -6],
+      [10, 1.6, 4],
+      [-10, 1.6, 4],
     ],
   },
   {
     type: 'patient',
-    position: [0, 1.6, -20],
+    position: [0, 1.0, -12],
+    rotation: [0, 0, 0],
+    patrolPoints: [
+      [0, 1.6, -12],
+      [6, 1.6, -12],
+      [-6, 1.6, -12],
+    ],
+  },
+
+  // --- EMERGENCY (z: -32..-15) ---
+  {
+    type: 'nurse',
+    position: [-14, 1.0, -20],
     rotation: [0, Math.PI / 2, 0],
     patrolPoints: [
-      [0, 1.6, -20],
-      [5, 1.6, -18],
-      [-5, 1.6, -18],
+      [-14, 1.6, -20],
+      [-14, 1.6, -28],
+      [-14, 1.6, -20],
     ],
+  },
+  {
+    type: 'patient',
+    position: [14, 1.0, -24],
+    rotation: [0, -Math.PI / 2, 0],
+    patrolPoints: [
+      [14, 1.6, -24],
+      [14, 1.6, -18],
+    ],
+  },
+
+  // --- SURGERY (z: 15..32) ---
+  {
+    type: 'nurse',
+    position: [-14, 1.0, 20],
+    rotation: [0, Math.PI / 2, 0],
+    patrolPoints: [
+      [-14, 1.6, 20],
+      [-14, 1.6, 28],
+      [-14, 1.6, 20],
+    ],
+  },
+
+  // --- UNDERGROUND LAB (Boss arena, x: 12..32) ---
+  {
+    type: 'nurse07',
+    position: [22, 1.0, 8],
+    rotation: [0, 0, 0],
+    patrolPoints: [], // idle — wakes when player enters lab
+    boss: true,
   },
 ];
 
@@ -77,6 +111,7 @@ export function EnemyManager() {
           initialRotation={enemyData.rotation}
           patrolPoints={enemyData.patrolPoints}
           playerPosition={playerPosition}
+          boss={enemyData.boss}
         />
       ))}
     </group>

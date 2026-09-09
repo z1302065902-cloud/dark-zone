@@ -1,5 +1,6 @@
 import { useGameStore } from '../../stores/gameStore';
-import { useEffect, useRef } from 'react';
+import { ObjectiveHUD } from '../environment/ObjectiveSystem';
+import { useEffect, useRef, useState } from 'react';
 
 export function GameUI() {
   const gameState = useGameStore((s) => s.gameState);
@@ -10,6 +11,12 @@ export function GameUI() {
   const currentWeapon = useGameStore((s) => s.currentWeapon);
   const ammo = useGameStore((s) => s.ammo);
   const maxAmmo = useGameStore((s) => s.maxAmmo);
+  const hitMarker = useGameStore((s) => s.hitMarker);
+  const isAiming = useGameStore((s) => s.isAiming);
+  const reloadProgress = useGameStore((s) => s.reloadProgress);
+  const bossActive = useGameStore((s) => s.bossActive);
+  const bossHealth = useGameStore((s) => s.bossHealth);
+  const bossMaxHealth = useGameStore((s) => s.bossMaxHealth);
   const flashlightOn = useGameStore((s) => s.flashlightOn);
   const flashlightBattery = useGameStore((s) => s.flashlightBattery);
   const inventory = useGameStore((s) => s.inventory);
@@ -17,7 +24,19 @@ export function GameUI() {
   const completedObjectives = useGameStore((s) => s.completedObjectives);
   const currentLevel = useGameStore((s) => s.currentLevel);
   const interactionPrompt = useGameStore((s) => s.interactionPrompt);
+  const [showInventory, setShowInventory] = useState(false);
 
+  // Tab toggles inventory
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        setShowInventory((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const weaponNames: Record<string, string> = {
     stunGun: '电击枪',
     pistol: '手枪',
@@ -35,6 +54,9 @@ export function GameUI() {
 
   return (
     <div className="game-hud">
+      {/* Objective HUD */}
+      <ObjectiveHUD />
+
       {/* Health Bar */}
       <div className="hud-element health-bar">
         <div className="bar-label">HP</div>
@@ -101,14 +123,48 @@ export function GameUI() {
         </div>
       </div>
 
-      {/* Crosshair */}
-      <div className="crosshair">
+      {/* Crosshair (shrinks while aiming) */}
+      <div className={`crosshair ${isAiming ? 'aiming' : ''}`}>
         <div className="crosshair-line horizontal left"></div>
         <div className="crosshair-line horizontal right"></div>
         <div className="crosshair-line vertical top"></div>
         <div className="crosshair-line vertical bottom"></div>
         <div className="crosshair-center"></div>
       </div>
+
+      {/* Boss HP bar (only while boss is active) */}
+      {bossActive && bossHealth > 0 && (
+        <div className="hud-element boss-bar">
+          <div className="bar-label">☠ 主控生物体</div>
+          <div className="bar-container boss">
+            <div
+              className="bar-fill boss"
+              style={{ width: `${Math.max(0, (bossHealth / bossMaxHealth) * 100)}%` }}
+            ></div>
+          </div>
+          <div className="bar-value">{Math.ceil(bossHealth)}/{bossMaxHealth}</div>
+        </div>
+      )}
+
+      {/* Hit marker — flashes when a shot connects */}
+      {hitMarker > 0 && Date.now() - hitMarker < 140 && (
+        <div className="hit-marker">
+          <div className="hit-marker-line top"></div>
+          <div className="hit-marker-line bottom"></div>
+          <div className="hit-marker-line left"></div>
+          <div className="hit-marker-line right"></div>
+        </div>
+      )}
+
+      {/* Reload progress bar */}
+      {reloadProgress > 0 && (
+        <div className="hud-element reload-bar">
+          <div className="bar-container">
+            <div className="bar-fill reload" style={{ width: `${(1 - reloadProgress) * 100}%` }}></div>
+          </div>
+          <div className="bar-label">装填中…</div>
+        </div>
+      )}
 
       {/* Interaction prompt (center of screen) */}
       {interactionPrompt && (
@@ -120,6 +176,9 @@ export function GameUI() {
           )}
         </div>
       )}
+
+      {/* Inventory (Tab) */}
+      {showInventory && <InventoryPanel />}
 
       {/* Objectives */}
       {completedObjectives.length > 0 && (
@@ -140,9 +199,66 @@ export function GameUI() {
   );
 }
 
+function InventoryPanel() {
+  const inventory = useGameStore((s) => s.inventory);
+  const weapons = useGameStore((s) => s.weapons);
+  const currentWeapon = useGameStore((s) => s.currentWeapon);
+
+  const itemNames: Record<string, string> = {
+    keycard: '门禁卡',
+    fuse: '保险丝',
+    key: '主钥匙',
+    master_key: '实验室主钥匙',
+    medkit: '医疗包',
+    battery: '电池',
+    ammo: '弹药',
+  };
+  const weaponNames: Record<string, string> = {
+    stunGun: '电击枪',
+    pistol: '手枪',
+    shotgun: '霰弹枪',
+    energyGun: '能量武器',
+    knife: '小刀',
+  };
+
+  return (
+    <div className="inventory-panel">
+      <div className="inventory-header">
+        <span>🎒 背包</span>
+        <small>TAB 关闭</small>
+      </div>
+      <div className="inventory-section">
+        <div className="inventory-label">武器</div>
+        <div className="inventory-grid">
+          {weapons.map((w) => (
+            <div key={w} className={`inventory-item ${currentWeapon === w ? 'active' : ''}`}>
+              <span className="inventory-item-name">{weaponNames[w] || w}</span>
+              <span className="inventory-item-qty">已装备</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="inventory-section">
+        <div className="inventory-label">物品</div>
+        <div className="inventory-grid">
+          {inventory.length === 0 && <div className="inventory-empty">（空）</div>}
+          {inventory.map((slot, i) => (
+            <div key={i} className="inventory-item">
+              <span className="inventory-item-name">{itemNames[slot.itemType] || slot.itemType}</span>
+              <span className="inventory-item-qty">×{slot.quantity ?? 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="inventory-footer">
+        目标：{useGameStore.getState().completedObjectives.length}/9 已完成
+      </div>
+    </div>
+  );
+}
+
 function InteractionPrompt() {
-  const [prompt, setPrompt] = useState<string | null>(null);
-  const promptRef = useRef<HTMLDivElement>(null);
+  const [prompt, setPrompt] = useState<string | null>(null);  const promptRef = useRef<HTMLDivElement>(null);
 
   // This would be connected to the InteractionSystem
   // For now, placeholder
@@ -158,5 +274,3 @@ function InteractionPrompt() {
     </div>
   );
 }
-
-import { useState } from 'react';

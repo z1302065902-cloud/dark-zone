@@ -3,6 +3,10 @@ import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CapsuleCollider, RapierRigidBody } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
+import { resolvePlayerCollision } from '../environment/collision';
+import { emitNoise } from '../enemy/Enemy';
+
+let __noiseTimerRef = 0;
 
 interface PlayerProps {
   children?: React.ReactNode;
@@ -108,8 +112,17 @@ export function Player({ children }: PlayerProps) {
   useFrame((state, delta) => {
     if (gameState !== 'playing') return;
 
-    // Apply camera rotation
-    camera.rotation.copy(euler.current);
+    // Clamp delta to avoid tunneling through thin walls on very low FPS
+    const dt = Math.min(delta, 0.05);
+
+    // Apply camera rotation (debug bridge can override for automated tests)
+    const rotOverride = (window as any).__dz?.rotationOverride;
+    if (rotOverride) {
+      camera.rotation.set(rotOverride.x, rotOverride.y, rotOverride.z);
+      euler.current.copy(camera.rotation);
+    } else {
+      camera.rotation.copy(euler.current);
+    }
     camera.position.y = CAMERA_HEIGHT;
 
     // Calculate movement direction relative to camera
@@ -128,9 +141,9 @@ export function Player({ children }: PlayerProps) {
     const currentSpeed = isSprinting ? SPRINT_SPEED : WALK_SPEED;
 
     if (isSprinting) {
-      useStamina(delta * 15);
+      useStamina(dt * 15);
     } else {
-      restoreStamina(delta * 10);
+      restoreStamina(dt * 10);
     }
 
     // Horizontal movement
@@ -143,7 +156,7 @@ export function Player({ children }: PlayerProps) {
     }
 
     // Gravity
-    velocity.current.y += GRAVITY * delta;
+    velocity.current.y += GRAVITY * dt;
 
     // Jump
     if (moveState.current.jump && isGrounded.current && canJump.current) {
@@ -158,9 +171,12 @@ export function Player({ children }: PlayerProps) {
     }
 
     // Apply velocity to camera position
-    camera.position.x += velocity.current.x * delta;
-    camera.position.y += velocity.current.y * delta;
-    camera.position.z += velocity.current.z * delta;
+    camera.position.x += velocity.current.x * dt;
+    camera.position.y += velocity.current.y * dt;
+    camera.position.z += velocity.current.z * dt;
+
+    // Resolve player collision against walls/doors/furniture (AABB)
+    resolvePlayerCollision(camera.position, 0.4);
 
     // Ground check (simple raycast)
     const groundCheck = new THREE.Raycaster(
@@ -207,6 +223,20 @@ export function useHeadBob(camera: THREE.Camera, enabled: boolean = true) {
     
     const { velocity } = useGameStore.getState();
     const speed = Math.sqrt(velocity.x ** 2 + velocity.current.z ** 2);
+    
+    // Noisy movement — sprinting makes noise nearby enemies can hear
+    const noiseTimer = __noiseTimerRef || 0;
+    if (speed > 2.5) {
+      const next = noiseTimer + delta;
+      if (next > (speed > 6 ? 0.7 : 1.1)) {
+        emitNoise(camera.position.x, camera.position.z, speed > 6 ? 12 : 7);
+        __noiseTimerRef = 0;
+      } else {
+        __noiseTimerRef = next;
+      }
+    } else {
+      __noiseTimerRef = 0;
+    }
     
     if (speed > 0.1) {
       bobPhase.current += delta * bobSpeed * (speed / 5);

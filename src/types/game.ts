@@ -1,5 +1,5 @@
 export type WeaponType = 'stunGun' | 'pistol' | 'shotgun' | 'energyGun' | 'knife' | 'axe' | 'baton' | 'chainsaw';
-export type ItemType = 'flashlight' | 'battery' | 'medkit' | 'painkiller' | 'key' | 'keycard' | 'fuse' | 'map' | 'tapeRecorder' | 'camera' | 'ammo' | 'explosive' | 'special';
+export type ItemType = 'flashlight' | 'battery' | 'medkit' | 'painkiller' | 'key' | 'master_key' | 'keycard' | 'fuse' | 'map' | 'tapeRecorder' | 'camera' | 'ammo' | 'explosive' | 'special';
 export type EnemyState = 'patrol' | 'hear' | 'see' | 'chase' | 'attack' | 'search' | 'die';
 export type GameState = 'menu' | 'playing' | 'paused' | 'gameover' | 'levelcomplete';
 

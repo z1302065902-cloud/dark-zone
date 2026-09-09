@@ -1,0 +1,46 @@
+{
+  "version": "0.1",
+  "polyhaven_hdris": [
+    "hospital_room",
+    "large_corridor",
+    "industrial_workshop_foundry",
+    "solitude_interior",
+    "debris_basement_corridor",
+    "childrens_hospital"
+  ],
+  "polyhaven_models": [
+    "modular_industrial_pipes_01",
+    "modular_pipes",
+    "modular_pipes_plastic_01",
+    "industrial_pipe_and_valve_01",
+    "industrial_pipe_and_valve_02",
+    "industrial_pipe_lamp",
+    "mounted_fluorescent_lights",
+    "medical_box",
+    "medical_tape",
+    "propane_tank",
+    "small_lpg_tank",
+    "pipe_wrench"
+  ],
+  "ambientcg_textures": [
+    "Tiles122",
+    "Tiles074",
+    "Concrete021",
+    "Metal032",
+    "Plaster043",
+    "Plastic011"
+  ],
+  "kenney_assets": [
+    "UI Pack",
+    "UI Audio",
+    "Furniture Kit",
+    "Industrial Props",
+    "Sci-Fi Props"
+  ],
+  "notes": {
+    "polyhaven_models": "Most hospital scenes are HDRIs only. Use modular pipes/lights + custom geometry.",
+    "ambientcg": "Manual download needed (requires API key for direct). Use browser.",
+    "kenney": "Manual download needed (blocks hotlinking). Use browser.",
+    "enemy_models": "Search Sketchfab: 'nurse robot', 'cyborg nurse', 'medical robot' with CC0/CC-BY filter."
+  }
+}
