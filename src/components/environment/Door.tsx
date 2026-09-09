@@ -3,6 +3,7 @@ import { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
+import { t } from '../../utils/i18n';
 import { dzSound } from '../AudioManager';
 import { ambientEvents } from './CyberDecor';
 import { colliders, type BoxCollider } from './collision';
@@ -126,8 +127,8 @@ export function Door({
         return true;
       } else {
         setInteractionPrompt({
-          title: '🔒 门已锁定',
-          description: '需要：恢复急诊区电力',
+          title: t('interact_locked'),
+          description: t('obj_unlock_emergency').desc,
         });
         playDenySound();
         return false;
@@ -153,12 +154,12 @@ export function Door({
       // Show what's needed
       const itemNames: Record<string, string> = {
         keycard: '门禁卡',
-        fuse: '保险丝',
+        fuse: t('item_fuse'),
         key: '主钥匙',
-        master_key: '实验室主钥匙',
+        master_key: t('item_master_key'),
       };
       setInteractionPrompt({
-        title: '🔒 门已锁定',
+        title: t('interact_locked'),
         description: `需要：${itemNames[req.item] || req.item}`,
       });
       playDenySound();
@@ -179,15 +180,15 @@ export function Door({
       };
       if (!store.interactionPrompt || store.interactionPrompt.title.includes('门已锁定')) {
         setInteractionPrompt({
-          title: '🔒 门已锁定',
+          title: t('interact_locked'),
           description: `需要：${itemNames[req.item] || req.item}`,
         });
       }
     } else if (near && (!locked || isUnlocked)) {
       if (state.openProgress < 0.9) {
         setInteractionPrompt({
-          title: '🚪 门已解锁',
-          description: '正在打开...',
+          title: t('interact_unlocked'),
+          description: t('interact_open'),
         });
       } else {
         setInteractionPrompt(null);

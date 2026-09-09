@@ -1,6 +1,7 @@
 import { useFrame, useThree, createPortal } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
+import { t } from '../../utils/i18n';
 import { useGameStore } from '../../stores/gameStore';
 import { emitNoise } from '../enemy/Enemy';
 import { dzSound } from '../AudioManager';
@@ -22,7 +23,7 @@ function findEnemyParent(obj: THREE.Object3D | null): (THREE.Object3D & { userDa
 export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   stunGun: {
     type: 'stunGun',
-    name: '电击枪',
+    name: t('w_stunGun'),
     damage: 25,
     fireRate: 0.8,
     range: 15,
@@ -35,7 +36,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   pistol: {
     type: 'pistol',
-    name: '手枪',
+    name: t('w_pistol'),
     damage: 35,
     fireRate: 0.4,
     range: 30,
@@ -48,7 +49,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   shotgun: {
     type: 'shotgun',
-    name: '霰弹枪',
+    name: t('w_shotgun'),
     damage: 12, // per pellet
     fireRate: 1.2,
     range: 12,
@@ -61,7 +62,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   energyGun: {
     type: 'energyGun',
-    name: '能量武器',
+    name: t('w_energyGun'),
     damage: 50,
     fireRate: 0.3,
     range: 40,
@@ -186,10 +187,18 @@ export function WeaponSystem() {
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('keydown', onKeyDown);
+    const onFireWeapon = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { weapon?: string } | null;
+      if (detail?.weapon) setCurrentWeapon(detail.weapon);
+      isFiring.current = true;
+      setTimeout(() => { isFiring.current = false; }, 50);
+    };
+    window.addEventListener('dz:fire-weapon', onFireWeapon as EventListener);
     return () => {
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('dz:fire-weapon', onFireWeapon as EventListener);
       setAiming(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

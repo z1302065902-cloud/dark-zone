@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { t } from '../../utils/i18n';
 
 interface Objective {
   id: string;
@@ -16,16 +17,16 @@ interface Objective {
 export const HOSPITAL_OBJECTIVES: Objective[] = [
   {
     id: 'find_keycard',
-    title: '寻找门禁卡',
-    description: '在大厅搜索急诊区的门禁卡',
+    title: t('obj_find_keycard').title,
+    description: t('obj_find_keycard').desc,
     type: 'find',
     targetId: 'keycard',
     completed: false,
   },
   {
     id: 'unlock_emergency',
-    title: '进入急诊区',
-    description: '使用门禁卡打开通往急诊区的门',
+    title: t('obj_unlock_emergency').title,
+    description: t('obj_unlock_emergency').desc,
     type: 'activate',
     targetId: 'door_emergency',
     requiredItems: ['keycard'],
@@ -33,16 +34,16 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'find_fuse',
-    title: '寻找保险丝',
-    description: '在急诊区找到备用保险丝',
+    title: t('obj_find_fuse').title,
+    description: t('obj_find_fuse').desc,
     type: 'find',
     targetId: 'fuse',
     completed: false,
   },
   {
     id: 'insert_fuse',
-    title: '恢复供电',
-    description: '将保险丝插入急诊区配电箱',
+    title: t('obj_restore_power').title,
+    description: t('obj_restore_power').desc,
     type: 'activate',
     targetId: 'fusebox_emergency',
     requiredItems: ['fuse'],
@@ -50,24 +51,24 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'restore_power',
-    title: '电力恢复',
-    description: '手术区大门解锁，继续前进',
+    title: t('obj_door_surgery').title,
+    description: t('obj_door_surgery').desc,
     type: 'activate',
     targetId: 'door_surgery',
     completed: false,
   },
   {
     id: 'find_master_key',
-    title: '寻找主钥匙',
-    description: '在手术区找到通往地下实验室的主钥匙',
+    title: t('obj_find_master_key').title,
+    description: t('obj_find_master_key').desc,
     type: 'find',
     targetId: 'master_key',
     completed: false,
   },
   {
     id: 'enter_lab',
-    title: '进入地下实验室',
-    description: '打开通往地下实验室的大门',
+    title: t('obj_enter_lab').title,
+    description: t('obj_enter_lab').desc,
     type: 'activate',
     targetId: 'door_lab',
     requiredItems: ['master_key'],
@@ -75,16 +76,16 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'defeat_boss',
-    title: '击败护士-07',
-    description: '消灭融合了器官与机械的护理机器人',
+    title: t('obj_defeat_boss').title,
+    description: t('obj_defeat_boss').desc,
     type: 'kill',
     targetId: 'nurse07',
     completed: false,
   },
   {
     id: 'escape_hospital',
-    title: '逃离医院',
-    description: '通过地下实验室的出口离开',
+    title: t('obj_escape_hospital').title,
+    description: t('obj_escape_hospital').desc,
     type: 'escape',
     completed: false,
   },

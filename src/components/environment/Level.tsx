@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { MeshReflectorMaterial } from '@react-three/drei';
 import { RigidBody } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
+import { t } from '../../utils/i18n';
 import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import {
@@ -27,7 +28,7 @@ export const levelConfigs: Record<string, {
   spawnPoint: [number, number, number];
 }> = {
   hospital: {
-    name: '赛博生化医院',
+    name: t('sign_hospital'),
     skybox: '/hdri/hospital_room_1k.hdr',
     fogColor: 0x0a0a16,
     fogNear: 6,
@@ -37,7 +38,7 @@ export const levelConfigs: Record<string, {
     spawnPoint: [0, 1.6, 6],
   },
   laboratory: {
-    name: '地下实验室',
+    name: t('sign_lab'),
     skybox: '/hdri/industrial_workshop_foundry_1k.hdr',
     fogColor: 0x05100a,
     fogNear: 1,
@@ -322,12 +323,12 @@ function CyberHospital() {
       <HoloAd position={[24.85, 3, -8]} rotation={[0, -Math.PI / 2, 0]} width={7} height={3.6} color={0x2bff88} />
 
       {/* ============ ZONE SIGNAGE ============ */}
-      <SignText text="赛博生化医院" position={[0, 4.2, -24.4]} width={12} height={2.2} color="#00e5ff" />
+      <SignText text={t('sign_hospital')} position={[0, 4.2, -24.4]} width={12} height={2.2} color="#00e5ff" />
       <SignText text="急诊区 EMERGENCY" position={[-12, 4.0, -24.45]} width={7} height={1.6} color="#ff2d95" />
-      <SignText text="手术区 SURGERY" position={[12, 4.0, -24.45]} width={7} height={1.6} color="#ff2d95" />
-      <SignText text="实验室 LAB" position={[-24.45, 4.0, -12]} rotation={[0, Math.PI / 2, 0]} width={7} height={1.6} color="#2bff88" />
+      <SignText text={t('sign_surgery')} position={[12, 4.0, -24.45]} width={7} height={1.6} color="#ff2d95" />
+      <SignText text={t('sign_lab')} position={[-24.45, 4.0, -12]} rotation={[0, Math.PI / 2, 0]} width={7} height={1.6} color="#2bff88" />
       <SignText text="地下研究所 B1" position={[-24.45, 4.0, 12]} rotation={[0, Math.PI / 2, 0]} width={7} height={1.6} color="#ff2d95" />
-      <SignText text="电梯 ELEVATOR" position={[24.45, 4.0, 0]} rotation={[0, -Math.PI / 2, 0]} width={7} height={1.6} color="#00e5ff" />
+      <SignText text={t('sign_elevator')} position={[24.45, 4.0, 0]} rotation={[0, -Math.PI / 2, 0]} width={7} height={1.6} color="#00e5ff" />
 
       {/* ============ KEY ITEMS (Pickups) ============ */}
       {/* Power junction (FuseBox) in Emergency — install fuse to restore power */}
@@ -566,7 +567,7 @@ function WeaponPickup({ weapon, position }: {
   const { addWeapon, setCurrentWeapon, setInteractionPrompt, reloadWeapon } = useGameStore();
   const meshRef = useRef<THREE.Group | null>(null);
   const picked = useRef(false);
-  const names: Record<string, string> = { pistol: '手枪', shotgun: '霰弹枪' };
+  const names: Record<string, string> = { pistol: t('w_pistol'), shotgun: t('w_shotgun') };
 
   useFrame(() => {
     if (picked.current) return;
@@ -597,7 +598,7 @@ function WeaponPickup({ weapon, position }: {
           playWeaponPickupSound();
           setInteractionPrompt({
             title: `✅ 获得：${names[weapon]}`,
-            description: '按 1/2 切换武器',
+            description: t('wp_switch'),
           });
           setTimeout(() => setInteractionPrompt(null), 3000);
         }

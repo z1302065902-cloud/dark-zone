@@ -3,6 +3,7 @@ import { useRef, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
+import { t } from '../../utils/i18n';
 import { dzSound } from '../AudioManager';
 import { ambientEvents } from './CyberDecor';
 
@@ -93,14 +94,14 @@ export function FuseBox({
         
         setInteractionPrompt({
           title: '⚡ 供电恢复',
-          description: '手术区大门已解锁',
+          description: t('obj_door_surgery').desc,
         });
         
         // Trigger power restored event
         setTimeout(() => setInteractionPrompt(null), 4000);
       } else {
         setInteractionPrompt({
-          title: '🔌 保险丝已安装',
+          title: t('obj_insert_fuse').title,
           description: `还需 ${requiredFuses - insertedCount} 个`,
         });
         setTimeout(() => setInteractionPrompt(null), 2000);
@@ -108,7 +109,7 @@ export function FuseBox({
     } else {
       setInteractionPrompt({
         title: '🔌 配电箱',
-        description: '需要保险丝 (E)',
+        description: t('obj_find_fuse').desc,
       });
       playDenySound();
       setInteractionCooldown(30);
@@ -130,7 +131,7 @@ export function FuseBox({
       if (!store.interactionPrompt || store.interactionPrompt.title.includes('配电箱')) {
         setInteractionPrompt({
           title: '🔌 配电箱',
-          description: hasItem('fuse') ? '安装保险丝 (E)' : '需要保险丝',
+          description: hasItem('fuse') ? t('interact_install') : t('item_fuse'),
         });
       }
     } else if (store.interactionPrompt?.title?.includes('配电箱')) {
@@ -337,7 +338,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
     },
     fuse: { 
       color: 0xffcc00, 
-      name: '保险丝', 
+      name: t('item_fuse'), 
       objId: 'find_fuse',
       model: () => (
         <group>
@@ -375,7 +376,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
     },
     master_key: { 
       color: 0xffaa00, 
-      name: '实验室主钥匙', 
+      name: t('item_master_key'), 
       objId: 'find_master_key',
       model: () => (
         <group>

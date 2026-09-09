@@ -1,6 +1,7 @@
 import { useGameStore } from '../../stores/gameStore';
 import { ObjectiveHUD } from '../environment/ObjectiveSystem';
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../../utils/i18n';
 
 export function GameUI() {
   const gameState = useGameStore((s) => s.gameState);
@@ -38,14 +39,14 @@ export function GameUI() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
   const weaponNames: Record<string, string> = {
-    stunGun: '电击枪',
-    pistol: '手枪',
-    shotgun: '霰弹枪',
-    energyGun: '能量武器',
-    knife: '小刀',
-    axe: '消防斧',
-    baton: '铁棍',
-    chainsaw: '电锯',
+    stunGun: t('w_stunGun'),
+    pistol: t('w_pistol'),
+    shotgun: t('w_shotgun'),
+    energyGun: t('w_energyGun'),
+    knife: t('w_knife'),
+    axe: t('w_axe'),
+    baton: t('w_baton'),
+    chainsaw: t('w_chainsaw'),
   };
 
   if (gameState === 'menu' || gameState === 'gameover' || gameState === 'levelcomplete') {
@@ -59,7 +60,7 @@ export function GameUI() {
 
       {/* Health Bar */}
       <div className="hud-element health-bar">
-        <div className="bar-label">HP</div>
+        <div className="bar-label">{t('hud_hp')}</div>
         <div className="bar-container">
           <div 
             className="bar-fill health" 
@@ -71,7 +72,7 @@ export function GameUI() {
 
       {/* Stamina Bar */}
       <div className="hud-element stamina-bar">
-        <div className="bar-label">STA</div>
+        <div className="bar-label">{t('hud_sta')}</div>
         <div className="bar-container">
           <div 
             className="bar-fill stamina" 
@@ -82,7 +83,7 @@ export function GameUI() {
 
       {/* Weapon & Ammo */}
       <div className="hud-element weapon-info">
-        <div className="weapon-name">{weaponNames[currentWeapon] || currentWeapon}</div>
+        <div className="weapon-name">{weaponNames[currentWeapon]}</div>
         <div className="ammo-display">
           <span className="current-ammo">{ammo[currentWeapon] || 0}</span>
           <span className="max-ammo">/ {maxAmmo[currentWeapon] || 0}</span>
@@ -135,7 +136,7 @@ export function GameUI() {
       {/* Boss HP bar (only while boss is active) */}
       {bossActive && bossHealth > 0 && (
         <div className="hud-element boss-bar">
-          <div className="bar-label">☠ 主控生物体</div>
+          <div className="bar-label">{t('boss_name')}</div>
           <div className="bar-container boss">
             <div
               className="bar-fill boss"
@@ -162,7 +163,7 @@ export function GameUI() {
           <div className="bar-container">
             <div className="bar-fill reload" style={{ width: `${(1 - reloadProgress) * 100}%` }}></div>
           </div>
-          <div className="bar-label">装填中…</div>
+          <div className="bar-label">{t('hud_reload')}</div>
         </div>
       )}
 
@@ -183,7 +184,7 @@ export function GameUI() {
       {/* Objectives */}
       {completedObjectives.length > 0 && (
         <div className="hud-element objectives">
-          <div className="objectives-title">任务目标</div>
+          <div className="objectives-title">{t('hud_objectives')}</div>
           {completedObjectives.map((obj, i) => (
             <div key={i} className="objective-item completed">
               <span className="objective-check">✓</span>
@@ -205,30 +206,30 @@ function InventoryPanel() {
   const currentWeapon = useGameStore((s) => s.currentWeapon);
 
   const itemNames: Record<string, string> = {
-    keycard: '门禁卡',
-    fuse: '保险丝',
-    key: '主钥匙',
-    master_key: '实验室主钥匙',
-    medkit: '医疗包',
-    battery: '电池',
-    ammo: '弹药',
+    keycard: t('item_keycard'),
+    fuse: t('item_fuse'),
+    key: t('item_master_key'),
+    master_key: t('item_master_key'),
+    medkit: t('item_medkit'),
+    battery: t('item_battery'),
+    ammo: t('item_ammo'),
   };
   const weaponNames: Record<string, string> = {
-    stunGun: '电击枪',
-    pistol: '手枪',
-    shotgun: '霰弹枪',
-    energyGun: '能量武器',
-    knife: '小刀',
+    stunGun: t('w_stunGun'),
+    pistol: t('w_pistol'),
+    shotgun: t('w_shotgun'),
+    energyGun: t('w_energyGun'),
+    knife: t('w_knife'),
   };
 
   return (
     <div className="inventory-panel">
       <div className="inventory-header">
         <span>🎒 背包</span>
-        <small>TAB 关闭</small>
+        <small>{t('hud_close')}</small>
       </div>
       <div className="inventory-section">
-        <div className="inventory-label">武器</div>
+        <div className="inventory-label">{t('hud_weapons')}</div>
         <div className="inventory-grid">
           {weapons.map((w) => (
             <div key={w} className={`inventory-item ${currentWeapon === w ? 'active' : ''}`}>
@@ -239,7 +240,7 @@ function InventoryPanel() {
         </div>
       </div>
       <div className="inventory-section">
-        <div className="inventory-label">物品</div>
+        <div className="inventory-label">{t('hud_items')}</div>
         <div className="inventory-grid">
           {inventory.length === 0 && <div className="inventory-empty">（空）</div>}
           {inventory.map((slot, i) => (
@@ -251,7 +252,7 @@ function InventoryPanel() {
         </div>
       </div>
       <div className="inventory-footer">
-        目标：{useGameStore.getState().completedObjectives.length}/9 已完成
+        {t('hud_obj_count', useGameStore.getState().completedObjectives.length)}
       </div>
     </div>
   );
