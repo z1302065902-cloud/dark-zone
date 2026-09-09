@@ -146,6 +146,7 @@ export function WeaponSystem() {
   const muzzleMeshRef = useRef<THREE.Mesh | null>(null);
   const lastFireTime = useRef(0);
   const isFiring = useRef(false);
+  const fireRef = useRef<() => void>(() => {});
   const isReloading = useRef(false);
   const reloadTimer = useRef(0);
   const aiming = useRef(false);
@@ -190,6 +191,10 @@ export function WeaponSystem() {
     const onFireWeapon = (e: Event) => {
       const detail = (e as CustomEvent).detail as { weapon?: string } | null;
       if (detail?.weapon) setCurrentWeapon(detail.weapon);
+      // Fire synchronously so E2E/debug bridge calls work even when the
+      // headless RAF loop isn't ticking. fireRef always holds the latest fire().
+      fireRef.current();
+      // Keep the isFiring flag too as a fallback for the frame loop.
       isFiring.current = true;
       setTimeout(() => { isFiring.current = false; }, 50);
     };
@@ -280,6 +285,10 @@ export function WeaponSystem() {
 
     dzSound.fire(currentWeapon);
   };
+
+  // Keep fireRef pointing at the latest fire() so the event handler (registered
+  // once in useEffect) always invokes the current closure.
+  fireRef.current = fire;
 
   // Reload
   const reload = () => {
