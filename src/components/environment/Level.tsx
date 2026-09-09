@@ -13,6 +13,7 @@ import { FuseBox, PickupItem } from './FuseBox';
 import { dzSound } from '../AudioManager';
 import { ObjectiveSystem, ObjectiveHUD } from './ObjectiveSystem';
 import { Wall, StaticBlock, registerCollider } from './collision';
+import { ModelAsset, preloadModels, MODEL_URLS } from './ModelAsset';
 
 // Level configurations
 export const levelConfigs: Record<string, {
@@ -94,6 +95,11 @@ interface LevelProps {
 export function Level({ levelId }: LevelProps) {
   const config = levelConfigs[levelId] || levelConfigs.hospital;
   const { setPlayerPosition, setCurrentLevel } = useGameStore();
+
+  // Preload CC0 furniture models in the background
+  useEffect(() => {
+    preloadModels();
+  }, []);
 
   // Set initial player position
   useMemo(() => {
@@ -327,29 +333,161 @@ function CyberHospital() {
       {/* Power junction (FuseBox) in Emergency — install fuse to restore power */}
       <FuseBox boxId="emergency" position={[-18, 0, -22]} requiredFuses={1} />
 
-      {/* Keycard in Lobby (on reception desk) */}
-      <PickupItem itemType="keycard" position={[-3, 1.8, -2]} rotation={[0, Math.PI, 0]} />
-      {/* Fuse in Emergency (on medical cart) */}
-      <PickupItem itemType="fuse" position={[-5, 1.3, -18]} rotation={[0, 0, 0]} />
-      {/* Master Key in Surgery (on surgical tray) */}
-      <PickupItem itemType="master_key" position={[5, 1.3, 18]} rotation={[0, 0, 0]} />
+      {/* Keycard in Lobby (on reception desk, top ~0.77m) */}
+      <PickupItem itemType="keycard" position={[-3, 1.05, -2]} rotation={[0, Math.PI, 0]} />
+      {/* Fuse in Emergency (on supply cart, top ~0.61m) */}
+      <PickupItem itemType="fuse" position={[-5, 0.85, -18]} rotation={[0, 0, 0]} />
+      {/* Master Key in Surgery (on supply cart) */}
+      <PickupItem itemType="master_key" position={[5, 0.85, 18]} rotation={[0, 0, 0]} />
       {/* Pistol in Emergency (security locker near fusebox) */}
       <WeaponPickup weapon="pistol" position={[-16, 1.2, -24]} />
 
-      {/* ============ DECOR ELEMENTS ============ */}
-      <ReceptionDesk position={[-3, 0, -2]} rotation={[0, Math.PI, 0]} />
-      <MedicalCart position={[-5, 0.5, -18]} />
-      <MedicalCart position={[5, 0.5, 18]} />
-      <MedicalCart position={[-9, 0.5, -20]} />
-      <MedicalCart position={[9, 0.5, 20]} />
-      <MedicalCart position={[-20, 0.5, -18]} />
+      {/* ============ DECOR ELEMENTS (CC0 Kenney furniture + procedural fallbacks) ============ */}
+      {/* Reception desk + terminal (lobby) */}
+      <ModelAsset
+        url="/assets/kenney/furniture/desk.glb"
+        position={[-3, 0, -2]}
+        rotation={[0, Math.PI, 0]}
+        scale={2}
+        fallback={<ReceptionDesk position={[-3, 0, -2]} rotation={[0, Math.PI, 0]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/computerScreen.glb"
+        position={[-3, 0.88, -2]}
+        rotation={[0, Math.PI, 0]}
+        scale={1.8}
+        fallback={null}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/computerKeyboard.glb"
+        position={[-3, 0.8, -2]}
+        rotation={[0, Math.PI, 0]}
+        scale={2}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/computerMouse.glb"
+        position={[-2.7, 0.8, -1.8]}
+        rotation={[0, Math.PI, 0]}
+        scale={2}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/chairDesk.glb"
+        position={[-3, 0, 1.2]}
+        rotation={[0, 0, 0]}
+        scale={1.8}
+      />
 
-      <Locker position={[-10, 1, -20]} />
-      <Locker position={[10, 1, 20]} />
-      <Locker position={[-18, 1, 10]} />
-      <Locker position={[-21, 1, 22]} />
-      <Locker position={[21, 1, -10]} />
-      <Locker position={[6, 1, -23]} />
+      {/* Medical supply carts (Emergency + Surgery) */}
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        position={[-5, 0, -18]}
+        scale={1.6}
+        fallback={<MedicalCart position={[-5, 0.5, -18]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        position={[5, 0, 18]}
+        rotation={[0, Math.PI, 0]}
+        scale={1.6}
+        fallback={<MedicalCart position={[5, 0.5, 18]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        position={[-9, 0, -20]}
+        scale={1.6}
+        fallback={<MedicalCart position={[-9, 0.5, -20]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        position={[9, 0, 20]}
+        rotation={[0, Math.PI, 0]}
+        scale={1.6}
+        fallback={<MedicalCart position={[9, 0.5, 20]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        position={[-20, 0, -18]}
+        scale={1.6}
+        fallback={<MedicalCart position={[-20, 0.5, -18]} />}
+      />
+
+      {/* Lockers (tall double cabinets) */}
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[-10, 0, -20]}
+        scale={2.2}
+        fallback={<Locker position={[-10, 1, -20]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[10, 0, 20]}
+        rotation={[0, Math.PI, 0]}
+        scale={2.2}
+        fallback={<Locker position={[10, 1, 20]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[-18, 0, 10]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={2.2}
+        fallback={<Locker position={[-18, 1, 10]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[-21, 0, 22]}
+        scale={2.2}
+        fallback={<Locker position={[-21, 1, 22]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[21, 0, -10]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={2.2}
+        fallback={<Locker position={[21, 1, -10]} />}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        position={[6, 0, -23]}
+        scale={2.2}
+        fallback={<Locker position={[6, 1, -23]} />}
+      />
+
+      {/* Hospital ward beds (Emergency) */}
+      <ModelAsset
+        url="/assets/kenney/furniture/bedSingle.glb"
+        position={[-4, 0, -22]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={2}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/bedSingle.glb"
+        position={[-8, 0, -22]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={2}
+      />
+
+      {/* Lobby waiting area: sofa + plant + radio table */}
+      <ModelAsset
+        url="/assets/kenney/furniture/loungeSofaLong.glb"
+        position={[-7, 0, 7]}
+        rotation={[0, Math.PI / 4, 0]}
+        scale={1.8}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/sideTable.glb"
+        position={[-9.5, 0, 8.5]}
+        scale={1.8}
+      />
+      <ModelAsset
+        url="/assets/kenney/furniture/radio.glb"
+        position={[-9.5, 0.7, 8.5]}
+        scale={2}
+      />
+      <ModelAsset url="/assets/kenney/furniture/plantSmall1.glb" position={[-8, 0, 12]} scale={3} />
+      <ModelAsset url="/assets/kenney/furniture/plantSmall2.glb" position={[8, 0, -6]} scale={3} />
+      <ModelAsset url="/assets/kenney/furniture/plantSmall2.glb" position={[8, 0, 12]} scale={3} />
+      <ModelAsset url="/assets/kenney/furniture/plantSmall1.glb" position={[14, 0, 14]} scale={3} />
+      <ModelAsset url="/assets/kenney/furniture/plantSmall3.glb" position={[-14, 0, -14]} scale={3} />
 
       <BioTank position={[-14, 0, -10]} scale={1} />
       <BioTank position={[13, 0, 12]} scale={0.85} />
@@ -380,21 +518,27 @@ function CyberHospital() {
 
 /* Register AABB colliders for major furniture so the player can't walk through */
 function FurnitureColliders() {  useEffect(() => {
-    // Reception desk
-    registerCollider(-3, -2, 2.2, 0.9, 1.2);
-    // Medical carts
-    registerCollider(-5, -18, 0.7, 0.4, 1.0);
-    registerCollider(5, 18, 0.7, 0.4, 1.0);
-    registerCollider(-9, -20, 0.7, 0.4, 1.0);
-    registerCollider(9, 20, 0.7, 0.4, 1.0);
-    registerCollider(-20, -18, 0.7, 0.4, 1.0);
-    // Lockers
-    registerCollider(-10, -20, 0.6, 0.35, 2.1);
-    registerCollider(10, 20, 0.6, 0.35, 2.1);
-    registerCollider(-18, 10, 0.6, 0.35, 2.1);
-    registerCollider(-21, 22, 0.6, 0.35, 2.1);
-    registerCollider(21, -10, 0.6, 0.35, 2.1);
-    registerCollider(6, -23, 0.6, 0.35, 2.1);
+    // Reception desk (model 1.47x0.78 footprint at [-3,-2])
+    registerCollider(-3, -2, 0.8, 0.45, 0.85);
+    // Medical carts (sideTableDrawers 0.85x0.36)
+    registerCollider(-5, -18, 0.45, 0.2, 0.7);
+    registerCollider(5, 18, 0.45, 0.2, 0.7);
+    registerCollider(-9, -20, 0.45, 0.2, 0.7);
+    registerCollider(9, 20, 0.45, 0.2, 0.7);
+    registerCollider(-20, -18, 0.45, 0.2, 0.7);
+    // Lockers (bookcaseClosedWide 1.76x0.55 x2.2)
+    registerCollider(-10, -20, 0.85, 0.28, 1.75);
+    registerCollider(10, 20, 0.85, 0.28, 1.75);
+    registerCollider(-18, 10, 0.85, 0.28, 1.75);
+    registerCollider(-21, 22, 0.85, 0.28, 1.75);
+    registerCollider(21, -10, 0.85, 0.28, 1.75);
+    registerCollider(6, -23, 0.85, 0.28, 1.75);
+    // Ward beds (bedSingle 1.14x2.25 at [-4,-22] and [-8,-22])
+    registerCollider(-4, -22, 0.6, 1.2, 0.8);
+    registerCollider(-8, -22, 0.6, 1.2, 0.8);
+    // Lobby sofa + side table
+    registerCollider(-7, 7, 0.9, 0.8, 0.9);
+    registerCollider(-9.5, 8.5, 0.5, 0.25, 0.7);
     // Bio tanks
     registerCollider(-14, -10, 0.9, 0.9, 2.2);
     registerCollider(13, 12, 0.8, 0.8, 2.0);
