@@ -18,6 +18,10 @@ if (new URLSearchParams(window.location.search).has('debug')) {
     ;(window as any).__dz.colliders = () =>
       m.colliders.map((c) => ({ minX: c.minX, maxX: c.maxX, minZ: c.minZ, maxZ: c.maxZ, active: c.active }))
   })
+  // Expose fireWeapon for E2E testing
+  ;(window as any).__dz.fireWeapon = () => {
+    window.dispatchEvent(new CustomEvent('dz:fire-weapon'))
+  }
 }
 
 function App() {
