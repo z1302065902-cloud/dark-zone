@@ -169,19 +169,25 @@ export function ObjectiveHUD() {
   const current = HOSPITAL_OBJECTIVES.find(obj => !completedObjectives.includes(obj.id));
   const progress = HOSPITAL_OBJECTIVES.filter(obj => completedObjectives.includes(obj.id)).length;
   const total = HOSPITAL_OBJECTIVES.length;
-  
+
   if (!current) return null;
-  
+
+  // Re-resolve localized text each render so the HUD follows language toggles
+  const objKey = `obj_${current.id}`;
+  const raw = (t as unknown as (k: string) => { title: string; desc: string })(objKey);
+  const title = raw && raw.title ? raw.title : current.title;
+  const desc = raw && raw.desc ? raw.desc : current.description;
+
   return (
     <div className="objective-hud" style={styles.container}>
       <div style={styles.header}>
         <span style={styles.icon}>🎯</span>
-        <span style={styles.title}>当前目标</span>
+        <span style={styles.title}>{t('obj_current')}</span>
         <span style={styles.progress}>{progress}/{total}</span>
       </div>
       <div style={styles.body}>
-        <div style={styles.objTitle}>{current.title}</div>
-        <div style={styles.objDesc}>{current.description}</div>
+        <div style={styles.objTitle}>{title}</div>
+        <div style={styles.objDesc}>{desc}</div>
       </div>
     </div>
   );

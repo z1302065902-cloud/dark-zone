@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { RigidBody, CapsuleCollider, RapierRigidBody } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
 import { dzSound } from '../AudioManager';
+import { t } from '../../utils/i18n';
 import type { EnemyConfig, EnemyState, Vector3 } from '../../types/game';
 
 interface EnemyProps {
@@ -22,7 +23,7 @@ interface EnemyProps {
 export const enemyConfigs: Record<string, EnemyConfig> = {
   nurse: {
     type: 'nurse',
-    name: '病房护士',
+    name: t('enemy_nurse'),
     health: 80,
     damage: 15,
     speed: 3.5,
@@ -42,7 +43,7 @@ export const enemyConfigs: Record<string, EnemyConfig> = {
   },
   patient: {
     type: 'patient',
-    name: '实验体',
+    name: t('enemy_patient'),
     health: 50,
     damage: 10,
     speed: 4.5,
@@ -62,7 +63,7 @@ export const enemyConfigs: Record<string, EnemyConfig> = {
   },
   butcher: {
     type: 'butcher',
-    name: '地铁屠夫',
+    name: t('enemy_butcher'),
     health: 200,
     damage: 30,
     speed: 5,
@@ -83,7 +84,7 @@ export const enemyConfigs: Record<string, EnemyConfig> = {
   // 0.1 Boss: Nurse-07 — biopunk boss of the underground lab
   nurse07: {
     type: 'nurse07',
-    name: '护士-07',
+    name: t('enemy_nurse07'),
     health: 400,
     damage: 22,
     speed: 4.2,

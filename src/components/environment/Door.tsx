@@ -153,14 +153,14 @@ export function Door({
     } else {
       // Show what's needed
       const itemNames: Record<string, string> = {
-        keycard: '门禁卡',
+        keycard: t('item_keycard'),
         fuse: t('item_fuse'),
-        key: '主钥匙',
+        key: t('item_master_key'),
         master_key: t('item_master_key'),
       };
       setInteractionPrompt({
         title: t('interact_locked'),
-        description: `需要：${itemNames[req.item] || req.item}`,
+        description: t('door_requires', itemNames[req.item] || req.item),
       });
       playDenySound();
       return false;
@@ -173,15 +173,15 @@ export function Door({
     
     if (near && locked && !isUnlocked) {
       const itemNames: Record<string, string> = {
-        keycard: '门禁卡 (E)',
-        fuse: '恢复电力',
-        key: '主钥匙 (E)',
-        master_key: '实验室主钥匙 (E)',
+        keycard: t('door_keycard'),
+        fuse: t('door_power'),
+        key: t('door_key'),
+        master_key: t('door_master_key'),
       };
-      if (!store.interactionPrompt || store.interactionPrompt.title.includes('门已锁定')) {
+      if (!store.interactionPrompt || store.interactionPrompt.title.includes(t('interact_locked'))) {
         setInteractionPrompt({
           title: t('interact_locked'),
-          description: `需要：${itemNames[req.item] || req.item}`,
+          description: t('door_requires', itemNames[req.item] || req.item),
         });
       }
     } else if (near && (!locked || isUnlocked)) {
@@ -193,7 +193,7 @@ export function Door({
       } else {
         setInteractionPrompt(null);
       }
-    } else if (store.interactionPrompt?.title?.includes('门')) {
+    } else if (store.interactionPrompt?.title?.includes(t('interact_locked')) || store.interactionPrompt?.title?.includes('LOCKED')) {
       setInteractionPrompt(null);
     }
     

@@ -48,11 +48,11 @@ function MainMenu() {
   return (
     <div className="menu-overlay">
       <div className="menu-content">
-        <h1 className="game-title">黑域：诡城</h1>
-        <p className="game-subtitle">DARK ZONE</p>
+        <h1 className="game-title">{t('game_title')}</h1>
+        <p className="game-subtitle">{t('game_subtitle')}</p>
         <div className="menu-buttons">
           <button className="menu-btn" onClick={startGame}>{t('menu_start')}</button>
-          <button className="menu-btn" onClick={() => setGameState('playing')}>{t('hud_close') === 'TAB close' ? 'Continue' : '继续游戏'}</button>
+          <button className="menu-btn" onClick={() => setGameState('playing')}>{t('menu_continue')}</button>
           <button className="menu-btn" onClick={toggleLang} id="langBtn">{lang === 'zh' ? 'English' : '中文'}</button>
         </div>
         <p className="game-credit">Cyber Horror FPS · Three.js · R3F · Rapier</p>
@@ -72,7 +72,7 @@ function GameOverScreen() {
         <p className="game-subtitle">{t('gameover_desc')}</p>
         <div className="menu-buttons">
           <button className="menu-btn" onClick={() => { resetGame(); setGameState('playing'); }}>{t('menu_start')}</button>
-          <button className="menu-btn" onClick={() => setGameState('menu')}>{t('hud_inventory') === 'INVENTORY' ? 'Main Menu' : '主菜单'}</button>
+          <button className="menu-btn" onClick={() => { resetGame(); setGameState('menu'); }}>{t('menu_main')}</button>
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@ function LevelCompleteScreen() {
         <p className="game-subtitle">{t('levelcomplete_desc')}</p>
         <div className="menu-buttons">
           <button className="menu-btn" onClick={() => setGameState('playing')}>{t('menu_start')}</button>
-          <button className="menu-btn" onClick={() => setGameState('menu')}>{t('hud_inventory') === 'INVENTORY' ? 'Main Menu' : '主菜单'}</button>
+          <button className="menu-btn" onClick={() => setGameState('menu')}>{t('menu_main')}</button>
         </div>
       </div>
     </div>

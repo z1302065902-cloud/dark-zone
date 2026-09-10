@@ -48,7 +48,7 @@ export const levelConfigs: Record<string, {
     spawnPoint: [0, 1.6, 0],
   },
   subway: {
-    name: '荒废地铁',
+    name: t('lvl_metro'),
     skybox: '/hdri/subway_tunnel_1k.hdr',
     fogColor: 0x0a0a0a,
     fogNear: 1,
@@ -58,7 +58,7 @@ export const levelConfigs: Record<string, {
     spawnPoint: [0, 1.6, 0],
   },
   forest: {
-    name: '黑森林',
+    name: t('lvl_forest'),
     skybox: '/hdri/forest_night_1k.hdr',
     fogColor: 0x0a150a,
     fogNear: 5,
@@ -68,7 +68,7 @@ export const levelConfigs: Record<string, {
     spawnPoint: [0, 1.6, 0],
   },
   town: {
-    name: '废弃小镇',
+    name: t('lvl_town'),
     skybox: '/hdri/town_ruins_1k.hdr',
     fogColor: 0x1a150a,
     fogNear: 10,
@@ -78,7 +78,7 @@ export const levelConfigs: Record<string, {
     spawnPoint: [0, 1.6, 0],
   },
   altar: {
-    name: '地下祭坛',
+    name: t('lvl_altar'),
     skybox: '/hdri/cave_altar_1k.hdr',
     fogColor: 0x1a0a0a,
     fogNear: 1,
@@ -571,17 +571,17 @@ function WeaponPickup({ weapon, position }: {
 
   useFrame(() => {
     if (picked.current) return;
-    const t = ambientEvents.time;
+    const time = ambientEvents.time;
     if (meshRef.current) {
-      meshRef.current.position.y = Math.sin(t * 1.5) * 0.06;
-      meshRef.current.rotation.y = t * 0.5;
+      meshRef.current.position.y = Math.sin(time * 1.5) * 0.06;
+      meshRef.current.rotation.y = time * 0.5;
     }
     const playerPos = useGameStore.getState().playerPosition;
     const dist = Math.hypot(playerPos.x - position[0], playerPos.z - position[2]);
     if (dist < 1.5) {
       const store = useGameStore.getState();
-      if (!store.interactionPrompt || !store.interactionPrompt.title.includes('拾取')) {
-        setInteractionPrompt({ title: `🔫 拾取${names[weapon]}`, description: '拾取 (E)' });
+      if (!store.interactionPrompt || (!store.interactionPrompt.title.includes('拾取') && !store.interactionPrompt.title.includes('Pick up'))) {
+        setInteractionPrompt({ title: `🔫 ${t('interact_pickup')} ${names[weapon]}`, description: t('interact_pickup') });
       }
     }
   });
@@ -597,7 +597,7 @@ function WeaponPickup({ weapon, position }: {
           setCurrentWeapon(weapon);
           playWeaponPickupSound();
           setInteractionPrompt({
-            title: `✅ 获得：${names[weapon]}`,
+            title: t('interact_obtained', names[weapon]),
             description: t('wp_switch'),
           });
           setTimeout(() => setInteractionPrompt(null), 3000);
@@ -648,7 +648,7 @@ function ZoneEmergency() {
     <group>
       {/* Fuse box alcove indicator */}
       <NeonEdge position={[-19.1, 0.12, -25]} rotation={[0, Math.PI / 2, 0]} length={10} color={0xff2d95} intensity={1.5} />
-      <SignText text="配电室" position={[-18.5, 3.6, -24.5]} width={4} height={1.2} color="#ff2d95" />
+      <SignText text={t('sign_power_room')} position={[-18.5, 3.6, -24.5]} width={4} height={1.2} color="#ff2d95" />
     </group>
   );
 }

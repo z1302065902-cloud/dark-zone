@@ -93,7 +93,7 @@ export function FuseBox({
         onComplete?.(boxId);
         
         setInteractionPrompt({
-          title: '⚡ 供电恢复',
+          title: t('obj_restore_power').title,
           description: t('obj_door_surgery').desc,
         });
         
@@ -102,13 +102,13 @@ export function FuseBox({
       } else {
         setInteractionPrompt({
           title: t('obj_insert_fuse').title,
-          description: `还需 ${requiredFuses - insertedCount} 个`,
+          description: t('fuse_needed', requiredFuses - insertedCount),
         });
         setTimeout(() => setInteractionPrompt(null), 2000);
       }
     } else {
       setInteractionPrompt({
-        title: '🔌 配电箱',
+        title: t('fuse_box'),
         description: t('obj_find_fuse').desc,
       });
       playDenySound();
@@ -128,13 +128,13 @@ export function FuseBox({
     
     const store = useGameStore.getState();
     if (near && !isComplete) {
-      if (!store.interactionPrompt || store.interactionPrompt.title.includes('配电箱')) {
+      if (!store.interactionPrompt || store.interactionPrompt.title.includes('FUSE BOX') || store.interactionPrompt.title.includes('配电箱')) {
         setInteractionPrompt({
-          title: '🔌 配电箱',
+          title: t('fuse_box'),
           description: hasItem('fuse') ? t('interact_install') : t('item_fuse'),
         });
       }
-    } else if (store.interactionPrompt?.title?.includes('配电箱')) {
+    } else if (store.interactionPrompt?.title?.includes('FUSE BOX') || store.interactionPrompt?.title?.includes('配电箱')) {
       setInteractionPrompt(null);
     }
   });
@@ -321,7 +321,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
   const configs: Record<string, { color: number; name: string; objId: string; model: () => JSX.Element }> = {
     keycard: { 
       color: 0x00e5ff, 
-      name: '门禁卡', 
+      name: t('item_keycard'), 
       objId: 'find_keycard',
       model: () => (
         <group>
@@ -359,7 +359,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
     },
     key: { 
       color: 0xffaa00, 
-      name: '主钥匙', 
+      name: t('item_master_key'), 
       objId: 'find_master_key',
       model: () => (
         <group>
@@ -403,13 +403,13 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
     if (picked.current) return;
     
     // Float and rotate animation
-    const t = ambientEvents.time;
+    const time = ambientEvents.time;
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(t * 1.5) * 0.08;
-      meshRef.current.rotation.y = t * 0.4 + rotation[1];
+      meshRef.current.position.y = position[1] + Math.sin(time * 1.5) * 0.08;
+      meshRef.current.rotation.y = time * 0.4 + rotation[1];
     }
     if (lightRef.current) {
-      lightRef.current.intensity = 2 + Math.sin(t * 3) * 1;
+      lightRef.current.intensity = 2 + Math.sin(time * 3) * 1;
     }
     
     // Check proximity
@@ -424,7 +424,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
       if (!store.interactionPrompt || store.interactionPrompt.title.includes(config.name)) {
         setInteractionPrompt({
           title: `🔑 ${config.name}`,
-          description: '拾取 (E)',
+          description: t('interact_pickup'),
         });
       }
     }
@@ -445,8 +445,8 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
           playPickupSound(config.color);
           
           setInteractionPrompt({
-            title: `✅ 获得：${config.name}`,
-            description: '已加入背包',
+            title: t('interact_obtained', config.name),
+            description: t('interact_added'),
           });
           setTimeout(() => setInteractionPrompt(null), 3000);
           

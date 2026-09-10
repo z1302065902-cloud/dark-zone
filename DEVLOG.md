@@ -43,3 +43,9 @@
 - 测试：`npx tsc --noEmit`；Playwright 截图到 /tmp，PIL 分析亮度
 - vite 后台：`cd /Users/zsy/dark-zone && nohup npx vite --host > /tmp/darkzone-vite.log 2>&1 &`
 - 断电循环参数：`CyberDecor.tsx` DynamicLightController，cycle=34s
+
+## 2026-09-12 E2E 全链打通（fireWeapon 修复）
+- **问题**：`__dz.fireWeapon()` 打 boss 不掉血。根因：事件只在 `isFiring` 上打标，真正开枪的 `fire()` 由 useFrame 轮询触发，headless 下 RAF 不跑 → fire() 从未执行。
+- **修复**：`WeaponSystem` 用 `fireRef` 持有最新 `fire()`，`dz:fire-weapon` 事件处理器**同步调用** `fireRef.current()`，不依赖帧循环。保留 isFiring 兜底。
+- **E2E 关键参数**：three.js camera rotation.y=0 时 forward 是 -z，瞄准公式 `rotY=atan2(-dx,-dz)`；fusebox 触发距离 <2（用 -18,-20.5）；boss 每枪前重置相机方向 + 900ms 等 fireRate。
+- **验证**：`/tmp/dz-e2e-final.js` 全链 PASS（9 目标 + levelcomplete + 0 错误），tsc --noEmit 干净。

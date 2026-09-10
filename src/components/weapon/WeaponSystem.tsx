@@ -75,7 +75,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   knife: {
     type: 'knife',
-    name: '小刀',
+    name: t('w_knife'),
     damage: 40,
     fireRate: 0.8,
     range: 2,
@@ -88,7 +88,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   axe: {
     type: 'axe',
-    name: '消防斧',
+    name: t('w_axe'),
     damage: 60,
     fireRate: 1.5,
     range: 2.5,
@@ -101,7 +101,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   baton: {
     type: 'baton',
-    name: '铁棍',
+    name: t('w_baton'),
     damage: 30,
     fireRate: 1,
     range: 2.2,
@@ -114,7 +114,7 @@ export const weaponConfigs: Record<WeaponType, WeaponConfig> = {
   },
   chainsaw: {
     type: 'chainsaw',
-    name: '电锯',
+    name: t('w_chainsaw'),
     damage: 20, // DPS
     fireRate: 0.1,
     range: 2.5,

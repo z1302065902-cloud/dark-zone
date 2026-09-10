@@ -3,6 +3,7 @@ import { Physics } from '@react-three/rapier';
 import { EffectComposer, Bloom, Vignette, Noise, ChromaticAberration } from '@react-three/postprocessing';
 import { GameScene } from './GameScene';
 import { useGameStore } from '../stores/gameStore';
+import { t } from '../utils/i18n';
 import { levelConfigs } from './environment/Level';
 import { useEffect, useRef } from 'react';
 
@@ -80,9 +81,9 @@ export function GameCanvas() {
       {gameState === 'paused' && (
         <div className="pause-overlay">
           <div className="pause-menu">
-            <h2>游戏暂停</h2>
-            <button onClick={() => setGameState('playing')}>继续游戏</button>
-            <button onClick={() => setGameState('menu')}>主菜单</button>
+            <h2>{t('pause_title')}</h2>
+            <button onClick={() => setGameState('playing')}>{t('pause_resume')}</button>
+            <button onClick={() => setGameState('menu')}>{t('pause_menu')}</button>
           </div>
         </div>
       )}

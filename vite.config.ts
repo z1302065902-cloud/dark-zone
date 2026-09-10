@@ -1,5 +1,10 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  // Simple config without React plugin for now
+  // Relative base so the build works under GitHub Pages sub-path, Vercel, and itch.io
+  base: './',
+  build: {
+    target: 'es2018',
+    chunkSizeWarningLimit: 1500,
+  },
 })

@@ -225,7 +225,7 @@ function InventoryPanel() {
   return (
     <div className="inventory-panel">
       <div className="inventory-header">
-        <span>🎒 背包</span>
+        <span>{t('hud_inventory')}</span>
         <small>{t('hud_close')}</small>
       </div>
       <div className="inventory-section">
@@ -234,7 +234,7 @@ function InventoryPanel() {
           {weapons.map((w) => (
             <div key={w} className={`inventory-item ${currentWeapon === w ? 'active' : ''}`}>
               <span className="inventory-item-name">{weaponNames[w] || w}</span>
-              <span className="inventory-item-qty">已装备</span>
+              <span className="inventory-item-qty">{t('hud_equipped')}</span>
             </div>
           ))}
         </div>
@@ -242,7 +242,7 @@ function InventoryPanel() {
       <div className="inventory-section">
         <div className="inventory-label">{t('hud_items')}</div>
         <div className="inventory-grid">
-          {inventory.length === 0 && <div className="inventory-empty">（空）</div>}
+          {inventory.length === 0 && <div className="inventory-empty">{t('hud_empty')}</div>}
           {inventory.map((slot, i) => (
             <div key={i} className="inventory-item">
               <span className="inventory-item-name">{itemNames[slot.itemType] || slot.itemType}</span>

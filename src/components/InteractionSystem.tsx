@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { useGameStore } from '../stores/gameStore';
+import { t } from '../utils/i18n';
 import type { ItemType } from '../types/game';
 
 // Interaction types
@@ -111,7 +112,7 @@ export function InteractionSystem() {
       
       // Check key requirement
       if (closest.requiresKey && !hasItem('key')) {
-        console.log('需要钥匙才能打开');
+        console.log(t('door_requires', t('item_master_key')));
         return;
       }
       
@@ -132,8 +133,8 @@ export function Door({
   rotation,
   openRotation = Math.PI / 2,
   requiresKey = false,
-  name = '门',
-  description = '需要钥匙',
+  name = t('interact_open'),
+  description = t('door_requires', t('item_master_key')),
   id = `door_${Math.random().toString(36).substr(2, 9)}`,
 }: {
   position: [number, number, number];
@@ -339,7 +340,7 @@ function getItemColor(type: ItemType): THREE.ColorRepresentation {
 // Save point
 export function SavePoint({
   position,
-  name = '存档点',
+  name = t('interact_savepoint'),
 }: {
   position: [number, number, number];
   name?: string;
@@ -363,7 +364,7 @@ export function SavePoint({
         position,
         radius: 3,
         name,
-        description: '保存到游戏',
+        description: t('interact_save_desc'),
         interact,
       }}
     >
