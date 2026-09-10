@@ -11,20 +11,23 @@ import * as THREE from 'three';
  * when an asset is missing (failures degrade to a `console.warn` + fallback mesh).
  */
 
+/* BASE_URL-aware asset paths — works on GitHub Pages sub-path, Vercel, and itch.io */
+const ASSET_BASE = import.meta.env.BASE_URL + 'assets/kenney/furniture/';
+
 export const MODEL_URLS = [
-  '/assets/kenney/furniture/bookcaseClosedWide.glb', // Locker (tall cabinet)
-  '/assets/kenney/furniture/sideTableDrawers.glb',   // Medical supply cart
-  '/assets/kenney/furniture/desk.glb',               // Reception desk
-  '/assets/kenney/furniture/computerScreen.glb',     // Terminal screen
-  '/assets/kenney/furniture/computerKeyboard.glb',
-  '/assets/kenney/furniture/computerMouse.glb',
-  '/assets/kenney/furniture/chairDesk.glb',
-  '/assets/kenney/furniture/bedSingle.glb',          // Hospital ward beds
-  '/assets/kenney/furniture/loungeSofaLong.glb',     // Lobby waiting area
-  '/assets/kenney/furniture/plantSmall1.glb',
-  '/assets/kenney/furniture/plantSmall2.glb',
-  '/assets/kenney/furniture/radio.glb',
-  '/assets/kenney/furniture/sideTable.glb',
+  ASSET_BASE + 'bookcaseClosedWide.glb', // Locker (tall cabinet)
+  ASSET_BASE + 'sideTableDrawers.glb',   // Medical supply cart
+  ASSET_BASE + 'desk.glb',               // Reception desk
+  ASSET_BASE + 'computerScreen.glb',     // Terminal screen
+  ASSET_BASE + 'computerKeyboard.glb',
+  ASSET_BASE + 'computerMouse.glb',
+  ASSET_BASE + 'chairDesk.glb',
+  ASSET_BASE + 'bedSingle.glb',          // Hospital ward beds
+  ASSET_BASE + 'loungeSofaLong.glb',     // Lobby waiting area
+  ASSET_BASE + 'plantSmall1.glb',
+  ASSET_BASE + 'plantSmall2.glb',
+  ASSET_BASE + 'radio.glb',
+  ASSET_BASE + 'sideTable.glb',
 ];
 
 /* Module-level promise cache — dedupes parallel loads, survives re-mounts */

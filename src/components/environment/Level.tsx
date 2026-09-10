@@ -16,6 +16,9 @@ import { ObjectiveSystem } from './ObjectiveSystem';
 import { Wall, StaticBlock, registerCollider } from './collision';
 import { ModelAsset, preloadModels } from './ModelAsset';
 
+/* BASE_URL-aware asset path (GitHub Pages sub-path / Vercel / itch.io safe) */
+const ASSET = import.meta.env.BASE_URL + 'assets/kenney/furniture/';
+
 // Level configurations
 export const levelConfigs: Record<string, {
   name: string;
@@ -346,33 +349,33 @@ function CyberHospital() {
       {/* ============ DECOR ELEMENTS (CC0 Kenney furniture + procedural fallbacks) ============ */}
       {/* Reception desk + terminal (lobby) */}
       <ModelAsset
-        url="/assets/kenney/furniture/desk.glb"
+        url={ASSET + 'desk.glb'}
         position={[-3, 0, -2]}
         rotation={[0, Math.PI, 0]}
         scale={2}
         fallback={<ReceptionDesk position={[-3, 0, -2]} rotation={[0, Math.PI, 0]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/computerScreen.glb"
+        url={ASSET + 'computerScreen.glb'}
         position={[-3, 0.88, -2]}
         rotation={[0, Math.PI, 0]}
         scale={1.8}
         fallback={null}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/computerKeyboard.glb"
+        url={ASSET + 'computerKeyboard.glb'}
         position={[-3, 0.8, -2]}
         rotation={[0, Math.PI, 0]}
         scale={2}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/computerMouse.glb"
+        url={ASSET + 'computerMouse.glb'}
         position={[-2.7, 0.8, -1.8]}
         rotation={[0, Math.PI, 0]}
         scale={2}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/chairDesk.glb"
+        url={ASSET + 'chairDesk.glb'}
         position={[-3, 0, 1.2]}
         rotation={[0, 0, 0]}
         scale={1.8}
@@ -380,33 +383,33 @@ function CyberHospital() {
 
       {/* Medical supply carts (Emergency + Surgery) */}
       <ModelAsset
-        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        url={ASSET + 'sideTableDrawers.glb'}
         position={[-5, 0, -18]}
         scale={1.6}
         fallback={<MedicalCart position={[-5, 0.5, -18]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        url={ASSET + 'sideTableDrawers.glb'}
         position={[5, 0, 18]}
         rotation={[0, Math.PI, 0]}
         scale={1.6}
         fallback={<MedicalCart position={[5, 0.5, 18]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        url={ASSET + 'sideTableDrawers.glb'}
         position={[-9, 0, -20]}
         scale={1.6}
         fallback={<MedicalCart position={[-9, 0.5, -20]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        url={ASSET + 'sideTableDrawers.glb'}
         position={[9, 0, 20]}
         rotation={[0, Math.PI, 0]}
         scale={1.6}
         fallback={<MedicalCart position={[9, 0.5, 20]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/sideTableDrawers.glb"
+        url={ASSET + 'sideTableDrawers.glb'}
         position={[-20, 0, -18]}
         scale={1.6}
         fallback={<MedicalCart position={[-20, 0.5, -18]} />}
@@ -414,40 +417,40 @@ function CyberHospital() {
 
       {/* Lockers (tall double cabinets) */}
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[-10, 0, -20]}
         scale={2.2}
         fallback={<Locker position={[-10, 1, -20]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[10, 0, 20]}
         rotation={[0, Math.PI, 0]}
         scale={2.2}
         fallback={<Locker position={[10, 1, 20]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[-18, 0, 10]}
         rotation={[0, Math.PI / 2, 0]}
         scale={2.2}
         fallback={<Locker position={[-18, 1, 10]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[-21, 0, 22]}
         scale={2.2}
         fallback={<Locker position={[-21, 1, 22]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[21, 0, -10]}
         rotation={[0, Math.PI / 2, 0]}
         scale={2.2}
         fallback={<Locker position={[21, 1, -10]} />}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bookcaseClosedWide.glb"
+        url={ASSET + 'bookcaseClosedWide.glb'}
         position={[6, 0, -23]}
         scale={2.2}
         fallback={<Locker position={[6, 1, -23]} />}
@@ -455,13 +458,13 @@ function CyberHospital() {
 
       {/* Hospital ward beds (Emergency) */}
       <ModelAsset
-        url="/assets/kenney/furniture/bedSingle.glb"
+        url={ASSET + 'bedSingle.glb'}
         position={[-4, 0, -22]}
         rotation={[0, Math.PI / 2, 0]}
         scale={2}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/bedSingle.glb"
+        url={ASSET + 'bedSingle.glb'}
         position={[-8, 0, -22]}
         rotation={[0, Math.PI / 2, 0]}
         scale={2}
@@ -469,26 +472,26 @@ function CyberHospital() {
 
       {/* Lobby waiting area: sofa + plant + radio table */}
       <ModelAsset
-        url="/assets/kenney/furniture/loungeSofaLong.glb"
+        url={ASSET + 'loungeSofaLong.glb'}
         position={[-7, 0, 7]}
         rotation={[0, Math.PI / 4, 0]}
         scale={1.8}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/sideTable.glb"
+        url={ASSET + 'sideTable.glb'}
         position={[-9.5, 0, 8.5]}
         scale={1.8}
       />
       <ModelAsset
-        url="/assets/kenney/furniture/radio.glb"
+        url={ASSET + 'radio.glb'}
         position={[-9.5, 0.7, 8.5]}
         scale={2}
       />
-      <ModelAsset url="/assets/kenney/furniture/plantSmall1.glb" position={[-8, 0, 12]} scale={3} />
-      <ModelAsset url="/assets/kenney/furniture/plantSmall2.glb" position={[8, 0, -6]} scale={3} />
-      <ModelAsset url="/assets/kenney/furniture/plantSmall2.glb" position={[8, 0, 12]} scale={3} />
-      <ModelAsset url="/assets/kenney/furniture/plantSmall1.glb" position={[14, 0, 14]} scale={3} />
-      <ModelAsset url="/assets/kenney/furniture/plantSmall3.glb" position={[-14, 0, -14]} scale={3} />
+      <ModelAsset url={ASSET + 'plantSmall1.glb'} position={[-8, 0, 12]} scale={3} />
+      <ModelAsset url={ASSET + 'plantSmall2.glb'} position={[8, 0, -6]} scale={3} />
+      <ModelAsset url={ASSET + 'plantSmall2.glb'} position={[8, 0, 12]} scale={3} />
+      <ModelAsset url={ASSET + 'plantSmall1.glb'} position={[14, 0, 14]} scale={3} />
+      <ModelAsset url={ASSET + 'plantSmall3.glb'} position={[-14, 0, -14]} scale={3} />
 
       <BioTank position={[-14, 0, -10]} scale={1} />
       <BioTank position={[13, 0, 12]} scale={0.85} />

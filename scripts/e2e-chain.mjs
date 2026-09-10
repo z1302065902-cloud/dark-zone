@@ -73,7 +73,8 @@ while (Date.now() - t0 < 60000) {
     return { bossHP: st.bossHealth, killed: st.completedObjectives.includes('defeat_boss'), hp: st.health };
   });
   if (res.killed) { killed = true; break; }
-  if (res.hp < 30) await page.evaluate(() => window.__dz.getState().heal(40));
+  // Production builds run RAF, so the boss actually attacks — keep HP topped up
+  await page.evaluate(() => window.__dz.getState().heal(100));
   await sleep(900); // fireRate 0.8s
 }
 console.log('7_BOSS_KILLED=' + killed);
