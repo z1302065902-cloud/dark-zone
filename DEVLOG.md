@@ -58,3 +58,19 @@
 - **butler push**：`butler push dist/ zsy2026/dark-zone:html5` → upload #19177149 → build #1964591，12.85 MiB
 - **E2E 验证 itch CDN**：`https://html-classic.itch.zone/html/19177149-1964591/index.html?debug=1` 全链 PASS（9 目标 + levelcomplete + 0 错误）
 - 脚本：scripts/itch-create|editpost|embed|publish|verify-public.mjs（fetch POST 模式）
+
+## 2026-09-10 · 爱发电上架「DARK ZONE 完整版」✅
+
+- **成功经验复用**：Firefox profile 复用（与 itch 同法）→ `https://afdian.com/setting/shop`（售卖商品）→ Add Product（上架新商品）
+- **登录态**：复制 Firefox profile `REauKUaI.配置文件 1/cookies.sqlite` → `/tmp/dz-afdian2-profile`，Playwright Firefox persistent context 打开即登录（auth_token 有效至 2027）
+- **关键表单字段**（Vue SPA）：
+  - 名称 `input[placeholder="Name of Product"]`
+  - 价格 `input[placeholder="00.00"]`（最低 ¥1）
+  - 封面 `input[type=file]` 第 1 个（推荐正方形，上传走 `api/upload/common-pic`）
+  - 正文 = Froala 富文本 `div[contenteditable="true"]`（set innerHTML + input event，含免费试玩链接）
+  - **型号（SKU）必填**：`input[placeholder="Required, fill in the name"]` = 型号名称（如「完整版」），漏填 → `ec:405 型号名称不能为空`
+  - Publish 按钮 = 保存并上架（`api/creator/edit-plan` → `ec:200 新增成功`）
+- **交付模式（未认证账号）**：不传文件，正文注明「付款后请私信『补发』获取下载链接」（与 CandyHop/horizon-rush 一致）
+- **结果**：https://afdian.com/item/170b3b9caced11f197865254001e7c00（plan_id 170b3b9caced11f197865254001e7c00，¥7，型号「DARK ZONE 完整版」）
+- **验证**：登录态打开 item 页 → 标题/描述/特性列表/免费试玩链接/Sponsor 按钮全渲染；匿名 headless 只渲染壳（懒加载，非问题）
+- **README 已更新**：部署表 + 支持区替换占位符 → 真实商品链接

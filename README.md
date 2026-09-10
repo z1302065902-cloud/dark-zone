@@ -45,9 +45,12 @@ node scripts/e2e-chain.mjs [baseUrl]
 | GitHub Pages | https://z1302065902-cloud.github.io/dark-zone/ |
 | Vercel | https://dark-zone-pi.vercel.app |
 | itch.io | https://zsy2026.itch.io/dark-zone |
+| 爱发电 | https://afdian.com/item/170b3b9caced11f197865254001e7c00 |
 
 构建使用相对路径 `base: './'`，资源经 `import.meta.env.BASE_URL` 解析，可在任意子路径部署。
 
 ## 💖 支持
 
-喜欢这个游戏？请支持我：[爱发电](https://afdian.com)（支持者将解锁更多关卡与内容）
+喜欢这个游戏？请支持我：[爱发电 · DARK ZONE 完整版](https://afdian.com/item/170b3b9caced11f197865254001e7c00)（¥7，支持者获得完整离线版，付款后私信「补发」获取下载）
+
+游戏可免费在线游玩（GitHub Pages / Vercel / itch.io 均可），爱发电为自愿支持通道。
