@@ -1,6 +1,6 @@
 import { firefox } from 'playwright';
 const PROFILE = '/tmp/dz-itch-profile';
-const ctx = await firefox.launchPersistentContext(PROFILE, { headless: false, viewport: { width: 1440, height: 1000 } });
+const ctx = await firefox.launchPersistentContext(PROFILE, { executablePath: '/Users/zsy/Library/Caches/ms-playwright/firefox-1542/firefox/Nightly.app/Contents/MacOS/firefox', headless: false, viewport: { width: 1440, height: 1000 } });
 const page = ctx.pages()[0] || await ctx.newPage();
 const log = (...a) => console.log('[url]', ...a);
 try {

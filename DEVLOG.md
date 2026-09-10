@@ -74,3 +74,13 @@
 - **结果**：https://afdian.com/item/170b3b9caced11f197865254001e7c00（plan_id 170b3b9caced11f197865254001e7c00，¥7，型号「DARK ZONE 完整版」）
 - **验证**：登录态打开 item 页 → 标题/描述/特性列表/免费试玩链接/Sponsor 按钮全渲染；匿名 headless 只渲染壳（懒加载，非问题）
 - **README 已更新**：部署表 + 支持区替换占位符 → 真实商品链接
+
+## 2026-09-10 商业化就绪 v1.0.0（存档/设置/引导/触屏/变现/合规）
+- **存档**：存档点已放置 Lobby（发光立方体，E 互动，toast「已保存」）；Player 节流同步位置（存档记录真实坐标）；主菜单「继续游戏」仅在有存档时显示；载入存档不覆盖玩家位置。
+- **设置**：settingsStore（persist）→ 主音量（master gain 路由全部 20 处 synth）、鼠标灵敏度（Player 读取）、语言（持久化）。主菜单 + 暂停菜单均可进入。
+- **新手引导**：首局双语操作教程覆盖（sessionStorage 只显示一次，?debug=1 自动跳过）。
+- **移动端**：触屏设备自动显示虚拟摇杆（左）+ 视角拖拽（右）+ 互动/开火/切枪/手电按钮；全部经既有事件桥注入（键盘模拟 + dz:touch-look + dz:fire-weapon），零侵入游戏逻辑。
+- **变现**：demo/full 判定（?full=1 / ?debug=1 / 本地 file:·localhost / 解锁码 localStorage）。在线免费端=Demo（第 4 目标后弹解锁墙，爱发电 ¥7 链接 + 解锁码输入，FNV 校验两个预置码）。离线包=完整版。
+- **合规**：public/privacy.html 双语隐私政策（本地存储声明、无第三方追踪）；轻量埋点 dz_analytics 仅本地 localStorage（200 条环形），不发送任何数据。
+- **验证**：build ✓；e2e-chain 9 目标全链 PASS（?debug=1）；settings/continue/unlock/offline/live 冒烟全过；截图包 screenshots/ 6 张 1920x1080。
+- **部署**：gh-pages ✓、vercel ✓、butler push itch ✓（build #1965172）；离线包 /tmp/dark-zone-v1.0.0-full.zip（9.6MB，含 mac/win 启动器 + 使用说明，localhost 自动完整版）。

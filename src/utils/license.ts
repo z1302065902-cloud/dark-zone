@@ -32,6 +32,13 @@ const VALID_CODES = new Set<number>([
 const isFileProtocol = (): boolean =>
   typeof window !== 'undefined' && window.location.protocol === 'file:';
 
+/** Local serving (offline ZIP launcher) counts as full version. */
+const isLocalHost = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const h = window.location.hostname;
+  return h === 'localhost' || h === '127.0.0.1' || h === '::1';
+};
+
 const hasUrlFlag = (flag: string): boolean => {
   if (typeof window === 'undefined') return false;
   return new URLSearchParams(window.location.search).has(flag);
@@ -50,7 +57,7 @@ const storedLicenseValid = (): boolean => {
 
 /** Is this a full (unlocked) build? */
 export const isFullVersion = (): boolean =>
-  isFileProtocol() || hasUrlFlag('full') || hasUrlFlag('debug') || storedLicenseValid();
+  isFileProtocol() || isLocalHost() || hasUrlFlag('full') || hasUrlFlag('debug') || storedLicenseValid();
 
 /** Is this a demo build (public free hosting)? */
 export const isDemoMode = (): boolean => !isFullVersion();
