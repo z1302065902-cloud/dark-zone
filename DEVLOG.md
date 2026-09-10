@@ -84,3 +84,10 @@
 - **合规**：public/privacy.html 双语隐私政策（本地存储声明、无第三方追踪）；轻量埋点 dz_analytics 仅本地 localStorage（200 条环形），不发送任何数据。
 - **验证**：build ✓；e2e-chain 9 目标全链 PASS（?debug=1）；settings/continue/unlock/offline/live 冒烟全过；截图包 screenshots/ 6 张 1920x1080。
 - **部署**：gh-pages ✓、vercel ✓、butler push itch ✓（build #1965172）；离线包 /tmp/dark-zone-v1.0.0-full.zip（9.6MB，含 mac/win 启动器 + 使用说明，localhost 自动完整版）。
+
+### 部署修复补记
+- 离线包运行方式：file:// 下浏览器拦截 ES module → 改为本地服务器启动器（launcher/ 目录：mac .command / win .bat + 使用说明），打包脚本 scripts/package-offline.mjs（build 后拷入 dist 再 zip）。
+- **license.ts 增加 localhost 判定**：本地服务器打开自动完整版（否则离线买家会看到付费墙）。
+- itch.io 上传链路两次失败：首次 build 处理不完整（CDN 404，页面已切换导致短时故障），二次重传成功；CDN query-string 缓存异常（`?debug=1` 404，`?v=` 200）——E2E 改用 `?debug=1&v=`；最终 itch CDN 全链 E2E PASS（build #1965172，与 dist hash 一致）。
+- e2e-chain.mjs 加 `BRIDGE_READY` 轮询（慢 CDN 下等 __dz.camera 就绪，替代固定 sleep）。
+- 爱发电：登录态过期，商品描述（"双击 index.html"→ 启动器说明）待人工登录更新。

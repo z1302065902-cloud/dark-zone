@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true, channel: 'chromium', args: ['--use-angle=swiftshader'] });
+const page = await browser.newPage();
+page.on('response', r => { if (r.status() >= 400) console.log('HTTP' + r.status() + ' ' + r.url().slice(0, 160)); });
+page.on('requestfailed', r => console.log('FAILED ' + r.url().slice(0, 160) + ' ' + (r.failure()?.errorText || '')));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+await page.goto('https://html-classic.itch.zone/html/19177149-1965172/index.html?debug=1', { waitUntil: 'domcontentloaded', timeout: 40000 }).catch(e => console.log('GOTO_ERR ' + (e.message || '').slice(0, 100)));
+await sleep(20000);
+console.log('TITLE=' + JSON.stringify(await page.title()));
+await browser.close();

@@ -25,7 +25,14 @@ const objs = () => page.evaluate(() => window.__dz.getState().completedObjective
 await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 40000 }).catch(() => {});
 await sleep(10000);
 await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('开始') || x.textContent.includes('Start')); b && b.click(); });
-await sleep(8000);
+// Wait until the R3F canvas bridge (__dz.camera) is ready (slow CDNs may take a while)
+let cameraReady = false;
+for (let i = 0; i < 60 && !cameraReady; i++) {
+  await sleep(1000);
+  cameraReady = await page.evaluate(() => !!(window.__dz && window.__dz.camera && window.__dz.getState)).catch(() => false);
+}
+console.log('BRIDGE_READY=' + cameraReady);
+if (!cameraReady) process.exit(1);
 
 // 1. keycard
 await tp(-3, 1.6, -2); await sleep(1200); await pressE(); await sleep(800);
