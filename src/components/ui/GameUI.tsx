@@ -3,6 +3,8 @@ import { ObjectiveHUD } from '../environment/ObjectiveSystem';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../../utils/i18n';
 import type { WeaponType } from '../../types/game';
+import { TouchControls } from './TouchControls';
+import { IntroOverlay } from './IntroOverlay';
 
 export function GameUI() {
   const gameState = useGameStore((s) => s.gameState);
@@ -53,6 +55,11 @@ export function GameUI() {
 
   return (
     <div className="game-hud">
+      {/* First-run tutorial (skipped in debug / after first close) */}
+      <IntroOverlay onClose={() => {}} />
+      {/* Mobile touch controls */}
+      <TouchControls />
+
       {/* Objective HUD */}
       <ObjectiveHUD />
 

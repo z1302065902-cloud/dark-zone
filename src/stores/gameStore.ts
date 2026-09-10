@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { track } from '../utils/analytics';
 import type { GameState, WeaponType, ItemType, InventorySlot, SaveData, Vector3 } from '../types/game';
 
 interface GameStore {
@@ -262,11 +263,14 @@ export const useGameStore = create<GameStore>()(
         flashlightBattery: Math.min(state.maxFlashlightBattery, state.flashlightBattery + amount),
       })),
 
-      completeObjective: (objectiveId) => set((state) => ({
-        completedObjectives: state.completedObjectives.includes(objectiveId)
-          ? state.completedObjectives
-          : [...state.completedObjectives, objectiveId],
-      })),
+      completeObjective: (objectiveId) => {
+        track('objective', { id: objectiveId });
+        return set((state) => ({
+          completedObjectives: state.completedObjectives.includes(objectiveId)
+            ? state.completedObjectives
+            : [...state.completedObjectives, objectiveId],
+        }));
+      },
 
       setCurrentLevel: (levelId) => set({ currentLevel: levelId }),
 
@@ -293,6 +297,7 @@ export const useGameStore = create<GameStore>()(
       },
 
       saveGame: () => {
+        track('save_game');
         const state = get();
         return {
           currentLevel: state.currentLevel,
@@ -319,7 +324,10 @@ export const useGameStore = create<GameStore>()(
         currentWeight: data.inventory.reduce((w, slot) => w + (itemWeights[slot.itemType] * slot.quantity), 0),
       }),
 
-      resetGame: () => set(initialState),
+      resetGame: () => {
+        track('reset_game');
+        return set(initialState);
+      },
     }),
     {
       name: 'dark-zone-save',

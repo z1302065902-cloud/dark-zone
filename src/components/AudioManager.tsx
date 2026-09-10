@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useGameStore } from '../stores/gameStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 /* ============================================================
    DARK ZONE — procedural audio system (Web Audio API).
@@ -12,10 +13,27 @@ import { useGameStore } from '../stores/gameStore';
 
 // Audio context singleton (created once, resumed on first gesture)
 let audioContext: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+
+/** Apply the current master volume setting to the master gain node. */
+export const applyMasterVolume = () => {
+  if (!masterGain) return;
+  try {
+    masterGain.gain.setTargetAtTime(
+      useSettingsStore.getState().masterVolume,
+      masterGain.context.currentTime,
+      0.05
+    );
+  } catch { /* noop */ }
+};
+
 export const getAudioContext = () => {
   if (!audioContext) {
     try {
       audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      masterGain = audioContext.createGain();
+      masterGain.gain.value = useSettingsStore.getState().masterVolume;
+      masterGain.connect(audioContext.destination);
     } catch {
       audioContext = null;
     }
@@ -25,6 +43,9 @@ export const getAudioContext = () => {
   }
   return audioContext;
 };
+
+/** Route any synth node through the master volume control. */
+export const masterOutput = (): AudioNode | null => masterGain;
 
 /** Build a short noise buffer (for gunshots, crackles, etc.) */
 function noiseBuffer(seconds: number, decay = 6): AudioBuffer | null {
@@ -54,7 +75,7 @@ const synth = {
     filter.frequency.setValueAtTime(700, t);
     gain.gain.setValueAtTime(type === 'metal' ? 0.22 : 0.3, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    osc.connect(filter); filter.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.15);
   },
 
@@ -69,7 +90,7 @@ const synth = {
     osc.frequency.linearRampToValueAtTime(95, t + 0.35);
     gain.gain.setValueAtTime(0.16, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.5);
   },
 
@@ -90,7 +111,7 @@ const synth = {
     filter.type = 'bandpass';
     filter.frequency.value = 500;
     filter.Q.value = 4;
-    osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    osc.connect(filter); filter.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.5);
   },
 
@@ -105,7 +126,7 @@ const synth = {
     osc.frequency.linearRampToValueAtTime(120, t + 0.2);
     gain.gain.setValueAtTime(0.12, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.35);
   },
 
@@ -120,7 +141,7 @@ const synth = {
     osc.frequency.exponentialRampToValueAtTime(950, t + 0.12);
     gain.gain.setValueAtTime(0.18, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.28);
   },
 
@@ -136,7 +157,7 @@ const synth = {
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
     lp.frequency.value = weapon === 'shotgun' ? 2500 : weapon === 'pistol' ? 5000 : 9000;
-    noise.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+    noise.connect(lp); lp.connect(gain); gain.connect(masterOutput()!);
     gain.gain.setValueAtTime(weapon === 'shotgun' ? 0.5 : weapon === 'pistol' ? 0.35 : 0.22, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + (weapon === 'shotgun' ? 0.35 : 0.12));
 
@@ -149,7 +170,7 @@ const synth = {
       osc.frequency.exponentialRampToValueAtTime(500, t + 0.18);
       g2.gain.setValueAtTime(0.2, t);
       g2.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      osc.connect(g2); g2.connect(ctx.destination);
+      osc.connect(g2); g2.connect(masterOutput()!);
       osc.start(t); osc.stop(t + 0.22);
     }
     noise.start(t);
@@ -168,7 +189,7 @@ const synth = {
       osc.frequency.setValueAtTime(900 - i * 300, t2);
       g.gain.setValueAtTime(0.12, t2);
       g.gain.exponentialRampToValueAtTime(0.001, t2 + 0.06);
-      osc.connect(g); g.connect(ctx.destination);
+      osc.connect(g); g.connect(masterOutput()!);
       osc.start(t2); osc.stop(t2 + 0.08);
     }
   },
@@ -184,7 +205,7 @@ const synth = {
     osc.frequency.linearRampToValueAtTime(800, t + 0.05);
     g.gain.setValueAtTime(0.1, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-    osc.connect(g); g.connect(ctx.destination);
+    osc.connect(g); g.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.08);
   },
 
@@ -199,7 +220,7 @@ const synth = {
     osc.frequency.exponentialRampToValueAtTime(55, t + 0.15);
     gain.gain.setValueAtTime(0.28, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.22);
   },
 
@@ -214,7 +235,7 @@ const synth = {
     osc.frequency.exponentialRampToValueAtTime(45, t + 0.6);
     gain.gain.setValueAtTime(0.35, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.75);
     // metallic screech layer
     const n = ctx.createBufferSource();
@@ -225,7 +246,7 @@ const synth = {
       bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 3;
       const g2 = ctx.createGain();
       g2.gain.setValueAtTime(0.12, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-      n.connect(bp); bp.connect(g2); g2.connect(ctx.destination);
+      n.connect(bp); bp.connect(g2); g2.connect(masterOutput()!);
       n.start(t);
     }
   },
@@ -243,7 +264,7 @@ const synth = {
     lp.type = 'lowpass'; lp.frequency.value = 300;
     gain.gain.setValueAtTime(0.2, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
-    osc.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+    osc.connect(lp); lp.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.6);
   },
 
@@ -259,7 +280,7 @@ const synth = {
     hp.type = 'highpass'; hp.frequency.value = 2500;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    n.connect(hp); hp.connect(g); g.connect(ctx.destination);
+    n.connect(hp); hp.connect(g); g.connect(masterOutput()!);
     n.start(t);
   },
 
@@ -277,7 +298,7 @@ const synth = {
     g.gain.linearRampToValueAtTime(0.01, t + 0.4);
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 800;
-    osc.connect(lp); lp.connect(g); g.connect(ctx.destination);
+    osc.connect(lp); lp.connect(g); g.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.5);
   },
 
@@ -294,7 +315,7 @@ const synth = {
     g.gain.linearRampToValueAtTime(0, t + 0.14);
     g.gain.linearRampToValueAtTime(0.35, t + 0.19);
     g.gain.linearRampToValueAtTime(0, t + 0.32);
-    osc.connect(g); g.connect(ctx.destination);
+    osc.connect(g); g.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.4);
   },
 
@@ -309,7 +330,7 @@ const synth = {
     osc.frequency.exponentialRampToValueAtTime(120, t + 0.35);
     gain.gain.setValueAtTime(0.4, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.6);
     const n = ctx.createBufferSource();
     const buf = noiseBuffer(0.4, 3);
@@ -317,7 +338,7 @@ const synth = {
       n.buffer = buf;
       const g2 = ctx.createGain();
       g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-      n.connect(g2); g2.connect(ctx.destination);
+      n.connect(g2); g2.connect(masterOutput()!);
       n.start(t);
     }
   },
@@ -334,7 +355,7 @@ const synth = {
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 1500;
     g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    osc.connect(lp); lp.connect(g); g.connect(ctx.destination);
+    osc.connect(lp); lp.connect(g); g.connect(masterOutput()!);
     osc.start(t); osc.stop(t + 0.35);
   },
 
@@ -354,7 +375,7 @@ const synth = {
     filter.Q.value = 5;
     gain.gain.setValueAtTime(0.05, ctx.currentTime);
     osc1.connect(filter); osc2.connect(filter);
-    filter.connect(gain); gain.connect(ctx.destination);
+    filter.connect(gain); gain.connect(masterOutput()!);
     osc1.start(ctx.currentTime); osc2.start(ctx.currentTime);
     return { osc1, osc2, gain, filter };
   },
@@ -389,6 +410,12 @@ export function AudioManager() {
   const gameState = useGameStore((s) => s.gameState);
   const health = useGameStore((s) => s.health);
   const maxHealth = useGameStore((s) => s.maxHealth);
+  const masterVolume = useSettingsStore((s) => s.masterVolume);
+
+  // React to master-volume changes in real time
+  useEffect(() => {
+    applyMasterVolume();
+  }, [masterVolume]);
 
   const ambientNodes = useRef<{ osc1: OscillatorNode; osc2: OscillatorNode; gain: GainNode; filter: BiquadFilterNode } | null>(null);
   const lastFootstepTime = useRef(0);

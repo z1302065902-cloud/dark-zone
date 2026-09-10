@@ -3,8 +3,8 @@ import { Game } from './components/Game'
 import { useGameStore } from './stores/gameStore'
 import './styles/game.css'
 
-// Dev-only bridge for automated testing (enabled via ?debug=1, harmless in prod)
-if (new URLSearchParams(window.location.search).has('debug')) {
+// Dev-only bridge for automated testing (enabled via ?debug=1 or ?demo=1, harmless in prod)
+if (new URLSearchParams(window.location.search).has('debug') || new URLSearchParams(window.location.search).has('demo')) {
   ;(window as any).__dz = {
     store: useGameStore,
     getState: () => useGameStore.getState(),

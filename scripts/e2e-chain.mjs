@@ -7,7 +7,7 @@ import { chromium } from 'playwright';
 const baseUrl = process.argv[2] || 'http://localhost:5174/?debug=1';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader'] });
+const browser = await chromium.launch({ headless: true, channel: 'chromium', args: ['--use-angle=swiftshader'] });
 const page = await browser.newPage();
 const consoleErrors = [];
 page.on('pageerror', e => consoleErrors.push('PAGEERROR: ' + (e.message || '').slice(0, 200)));

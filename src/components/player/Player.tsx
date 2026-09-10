@@ -3,7 +3,9 @@ import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CapsuleCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { resolvePlayerCollision } from '../environment/collision';
+import { isTouchDevice } from '../../utils/touch';
 import { emitNoise } from '../enemy/Enemy';
 
 let __noiseTimerRef = 0;
@@ -18,6 +20,8 @@ export function Player({ children }: PlayerProps) {
   const stamina = useGameStore((s) => s.stamina);
   const restoreStamina = useGameStore((s) => s.restoreStamina);
   const useStamina = useGameStore((s) => s.useStamina);
+  const setPlayerPosition = useGameStore((s) => s.setPlayerPosition);
+  const sensitivityMult = useSettingsStore((s) => s.sensitivity);
 
   // Movement state
   const velocity = useRef(new THREE.Vector3());
@@ -32,11 +36,12 @@ export function Player({ children }: PlayerProps) {
   });
   const isGrounded = useRef(false);
   const canJump = useRef(true);
+  const lastPosSync = useRef(0);
   
   // Camera rotation
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const pointerLocked = useRef(false);
-  const mouseSensitivity = 0.002;
+  const mouseSensitivity = 0.002 * sensitivityMult;
   
   // Constants
   const WALK_SPEED = 4.5;
@@ -51,7 +56,7 @@ export function Player({ children }: PlayerProps) {
     const canvas = gl.domElement;
     
     const onClick = () => {
-      if (gameState === 'playing') {
+      if (gameState === 'playing' && !isTouchDevice()) {
         canvas.requestPointerLock();
       }
     };
@@ -90,11 +95,20 @@ export function Player({ children }: PlayerProps) {
       euler.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.current.x));
     };
 
+    const onTouchLook = (e: Event) => {
+      const d = (e as CustomEvent).detail as { rx: number; ry: number } | null;
+      if (!d) return;
+      euler.current.x -= d.rx;
+      euler.current.y -= d.ry;
+      euler.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.current.x));
+    };
+
     canvas.addEventListener('click', onClick);
     document.addEventListener('pointerlockchange', onPointerLockChange);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     document.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('dz:touch-look', onTouchLook);
 
     return () => {
       canvas.removeEventListener('click', onClick);
@@ -102,6 +116,7 @@ export function Player({ children }: PlayerProps) {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       document.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('dz:touch-look', onTouchLook);
     };
   }, [gameState, gl.domElement]);
 
@@ -119,8 +134,7 @@ export function Player({ children }: PlayerProps) {
       euler.current.copy(camera.rotation);
     } else {
       camera.rotation.copy(euler.current);
-    }
-    camera.position.y = CAMERA_HEIGHT;
+    }    camera.position.y = CAMERA_HEIGHT;
 
     // Calculate movement direction relative to camera
     direction.current.set(0, 0, 0);
@@ -195,6 +209,13 @@ export function Player({ children }: PlayerProps) {
     // Keep camera at minimum height
     if (camera.position.y < CAMERA_HEIGHT) {
       camera.position.y = CAMERA_HEIGHT;
+    }
+
+    // Sync position to store (throttled ~8Hz) so save points record the real location
+    const now = performance.now();
+    if (now - lastPosSync.current > 125) {
+      lastPosSync.current = now;
+      setPlayerPosition({ x: camera.position.x, y: camera.position.y, z: camera.position.z });
     }
   });
 

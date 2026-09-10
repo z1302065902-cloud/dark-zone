@@ -11,6 +11,7 @@ import {
 } from './CyberDecor';
 import { Door } from './Door';
 import { FuseBox, PickupItem } from './FuseBox';
+import { SavePoint } from '../InteractionSystem';
 import { dzSound } from '../AudioManager';
 import { ObjectiveSystem } from './ObjectiveSystem';
 import { Wall, StaticBlock, registerCollider } from './collision';
@@ -105,9 +106,12 @@ export function Level({ levelId }: LevelProps) {
     preloadModels();
   }, []);
 
-  // Set initial player position
+  // Set initial player position (only for a fresh run — a loaded save keeps its own position)
   useMemo(() => {
-    setPlayerPosition({ x: config.spawnPoint[0], y: config.spawnPoint[1], z: config.spawnPoint[2] });
+    const st = useGameStore.getState();
+    if (st.completedObjectives.length === 0) {
+      setPlayerPosition({ x: config.spawnPoint[0], y: config.spawnPoint[1], z: config.spawnPoint[2] });
+    }
     setCurrentLevel(levelId);
   }, [levelId, setPlayerPosition, setCurrentLevel]);
 
@@ -332,6 +336,9 @@ function CyberHospital() {
       <SignText text={t('sign_lab')} position={[-24.45, 4.0, -12]} rotation={[0, Math.PI / 2, 0]} width={7} height={1.6} color="#2bff88" />
       <SignText text="地下研究所 B1" position={[-24.45, 4.0, 12]} rotation={[0, Math.PI / 2, 0]} width={7} height={1.6} color="#ff2d95" />
       <SignText text={t('sign_elevator')} position={[24.45, 4.0, 0]} rotation={[0, -Math.PI / 2, 0]} width={7} height={1.6} color="#00e5ff" />
+
+      {/* ============ SAVE POINT (Lobby, near spawn) ============ */}
+      <SavePoint position={[0, 0.5, 4]} />
 
       {/* ============ KEY ITEMS (Pickups) ============ */}
       {/* Power junction (FuseBox) in Emergency — install fuse to restore power */}

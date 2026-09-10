@@ -343,14 +343,17 @@ export function SavePoint({
   name?: string;
 }) {
   const saveGame = useGameStore((s) => s.saveGame);
+  const setInteractionPrompt = useGameStore((s) => s.setInteractionPrompt);
   const [glowing, setGlowing] = useState(false);
 
   const interact = useCallback(() => {
     saveGame();
     setGlowing(true);
     setTimeout(() => setGlowing(false), 2000);
+    setInteractionPrompt({ title: t('save_done'), description: t('interact_save_desc') });
+    setTimeout(() => setInteractionPrompt(null), 1600);
     console.log('Game saved');
-  }, [saveGame]);
+  }, [saveGame, setInteractionPrompt]);
 
   return (
     <group
