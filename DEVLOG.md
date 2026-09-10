@@ -49,3 +49,12 @@
 - **修复**：`WeaponSystem` 用 `fireRef` 持有最新 `fire()`，`dz:fire-weapon` 事件处理器**同步调用** `fireRef.current()`，不依赖帧循环。保留 isFiring 兜底。
 - **E2E 关键参数**：three.js camera rotation.y=0 时 forward 是 -z，瞄准公式 `rotY=atan2(-dx,-dz)`；fusebox 触发距离 <2（用 -18,-20.5）；boss 每枪前重置相机方向 + 900ms 等 fireRate。
 - **验证**：`/tmp/dz-e2e-final.js` 全链 PASS（9 目标 + levelcomplete + 0 错误），tsc --noEmit 干净。
+
+## 2026-09-12 itch.io 部署成功（HTML + 可收费）
+- **创建游戏页**：Playwright Firefox 持久化 profile（复制 cookie sqlite 到 /tmp/dz-itch-profile）驱动 https://itch.io/game/new
+- **突破**：前端 React 提交按钮不稳定（selectize 隐藏、submit 按钮时有时无），改用**页面内 fetch POST FormData**（带 csrf_token + cookie，绕过 React 前端校验）
+- **枚举踩坑**：type 合法值 = `default|flash|unity|java|html`（不是 html5）；embed_type = `frame|maximized`；size_type = `manual|auto`；short_text ≤120 字符（中文按多字节计数，纯英文 108 字符过）
+- **结果**：https://zsy2026.itch.io/dark-zone（id 4993039），type=html，embed frame 960x540，published 公开，Games › Free + Support This Game（$0 or donate 默认收费通道）
+- **butler push**：`butler push dist/ zsy2026/dark-zone:html5` → upload #19177149 → build #1964591，12.85 MiB
+- **E2E 验证 itch CDN**：`https://html-classic.itch.zone/html/19177149-1964591/index.html?debug=1` 全链 PASS（9 目标 + levelcomplete + 0 错误）
+- 脚本：scripts/itch-create|editpost|embed|publish|verify-public.mjs（fetch POST 模式）
