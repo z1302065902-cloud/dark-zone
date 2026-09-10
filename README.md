@@ -44,7 +44,7 @@ node scripts/e2e-chain.mjs [baseUrl]
 |------|------|
 | GitHub Pages | https://z1302065902-cloud.github.io/dark-zone/ |
 | Vercel | https://dark-zone-pi.vercel.app |
-| itch.io | 即将上线 |
+| itch.io | https://zsy2026.itch.io/dark-zone |
 
 构建使用相对路径 `base: './'`，资源经 `import.meta.env.BASE_URL` 解析，可在任意子路径部署。
 
