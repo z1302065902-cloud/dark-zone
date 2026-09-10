@@ -2,6 +2,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { ObjectiveHUD } from '../environment/ObjectiveSystem';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../../utils/i18n';
+import type { WeaponType } from '../../types/game';
 
 export function GameUI() {
   const gameState = useGameStore((s) => s.gameState);
@@ -20,10 +21,7 @@ export function GameUI() {
   const bossMaxHealth = useGameStore((s) => s.bossMaxHealth);
   const flashlightOn = useGameStore((s) => s.flashlightOn);
   const flashlightBattery = useGameStore((s) => s.flashlightBattery);
-  const inventory = useGameStore((s) => s.inventory);
-  const getItemQuantity = useGameStore((s) => s.getItemQuantity);
   const completedObjectives = useGameStore((s) => s.completedObjectives);
-  const currentLevel = useGameStore((s) => s.currentLevel);
   const interactionPrompt = useGameStore((s) => s.interactionPrompt);
   const [showInventory, setShowInventory] = useState(false);
 
@@ -89,7 +87,7 @@ export function GameUI() {
           <span className="max-ammo">/ {maxAmmo[currentWeapon] || 0}</span>
         </div>
         <div className="weapon-slots">
-          {['stunGun', 'pistol', 'shotgun', 'energyGun', 'knife', 'axe', 'baton', 'chainsaw'].map(w => (
+          {(['stunGun', 'pistol', 'shotgun', 'energyGun', 'knife', 'axe', 'baton', 'chainsaw'] as WeaponType[]).map(w => (
             <div 
               key={w} 
               className={`weapon-slot ${currentWeapon === w ? 'active' : ''} ${!ammo[w] && w !== 'stunGun' ? 'locked' : ''}`}
@@ -259,7 +257,7 @@ function InventoryPanel() {
 }
 
 function InteractionPrompt() {
-  const [prompt, setPrompt] = useState<string | null>(null);  const promptRef = useRef<HTMLDivElement>(null);
+  const [prompt] = useState<string | null>(null);  const promptRef = useRef<HTMLDivElement>(null);
 
   // This would be connected to the InteractionSystem
   // For now, placeholder

@@ -345,7 +345,7 @@ export function Enemy({
   };
 
   // Move towards target (kinematic velocity)
-  const moveTowards = (target: THREE.Vector3, speed: number, delta: number) => {
+  const moveTowards = (target: THREE.Vector3, speed: number, _delta: number) => {
     const _t = rigidBodyRef.current?.translation();
     const enemyPos = _t ? new THREE.Vector3(_t.x, _t.y, _t.z) : new THREE.Vector3(...initialPosition);
     const direction = target.clone().sub(enemyPos);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { t } from '../../utils/i18n';
+import { t, tObj } from '../../utils/i18n';
+import type { ItemType } from '../../types/game';
 
 interface Objective {
   id: string;
@@ -17,16 +18,16 @@ interface Objective {
 export const HOSPITAL_OBJECTIVES: Objective[] = [
   {
     id: 'find_keycard',
-    title: t('obj_find_keycard').title,
-    description: t('obj_find_keycard').desc,
+    title: tObj('obj_find_keycard').title,
+    description: tObj('obj_find_keycard').desc,
     type: 'find',
     targetId: 'keycard',
     completed: false,
   },
   {
     id: 'unlock_emergency',
-    title: t('obj_unlock_emergency').title,
-    description: t('obj_unlock_emergency').desc,
+    title: tObj('obj_unlock_emergency').title,
+    description: tObj('obj_unlock_emergency').desc,
     type: 'activate',
     targetId: 'door_emergency',
     requiredItems: ['keycard'],
@@ -34,16 +35,16 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'find_fuse',
-    title: t('obj_find_fuse').title,
-    description: t('obj_find_fuse').desc,
+    title: tObj('obj_find_fuse').title,
+    description: tObj('obj_find_fuse').desc,
     type: 'find',
     targetId: 'fuse',
     completed: false,
   },
   {
     id: 'insert_fuse',
-    title: t('obj_restore_power').title,
-    description: t('obj_restore_power').desc,
+    title: tObj('obj_restore_power').title,
+    description: tObj('obj_restore_power').desc,
     type: 'activate',
     targetId: 'fusebox_emergency',
     requiredItems: ['fuse'],
@@ -51,24 +52,24 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'restore_power',
-    title: t('obj_door_surgery').title,
-    description: t('obj_door_surgery').desc,
+    title: tObj('obj_door_surgery').title,
+    description: tObj('obj_door_surgery').desc,
     type: 'activate',
     targetId: 'door_surgery',
     completed: false,
   },
   {
     id: 'find_master_key',
-    title: t('obj_find_master_key').title,
-    description: t('obj_find_master_key').desc,
+    title: tObj('obj_find_master_key').title,
+    description: tObj('obj_find_master_key').desc,
     type: 'find',
     targetId: 'master_key',
     completed: false,
   },
   {
     id: 'enter_lab',
-    title: t('obj_enter_lab').title,
-    description: t('obj_enter_lab').desc,
+    title: tObj('obj_enter_lab').title,
+    description: tObj('obj_enter_lab').desc,
     type: 'activate',
     targetId: 'door_lab',
     requiredItems: ['master_key'],
@@ -76,16 +77,16 @@ export const HOSPITAL_OBJECTIVES: Objective[] = [
   },
   {
     id: 'defeat_boss',
-    title: t('obj_defeat_boss').title,
-    description: t('obj_defeat_boss').desc,
+    title: tObj('obj_defeat_boss').title,
+    description: tObj('obj_defeat_boss').desc,
     type: 'kill',
     targetId: 'nurse07',
     completed: false,
   },
   {
     id: 'escape_hospital',
-    title: t('obj_escape_hospital').title,
-    description: t('obj_escape_hospital').desc,
+    title: tObj('obj_escape_hospital').title,
+    description: tObj('obj_escape_hospital').desc,
     type: 'escape',
     completed: false,
   },
@@ -96,7 +97,6 @@ export function ObjectiveSystem() {
     completedObjectives, 
     completeObjective, 
     hasItem,
-    setInteractionPrompt,
     currentLevel 
   } = useGameStore();
   
@@ -115,9 +115,9 @@ export function ObjectiveSystem() {
     HOSPITAL_OBJECTIVES.forEach(obj => {
       if (completedObjectives.includes(obj.id)) return;
       
-      if (obj.requiredItems && obj.requiredItems.every(item => hasItem(item))) {
+      if (obj.requiredItems && obj.requiredItems.every(item => hasItem(item as ItemType))) {
         // Check if we're at the right location (simplified)
-        if (obj.type === 'find' && hasItem(obj.targetId || '')) {
+        if (obj.type === 'find' && hasItem(obj.targetId as ItemType)) {
           completeObjective(obj.id);
         }
       }
@@ -173,10 +173,9 @@ export function ObjectiveHUD() {
   if (!current) return null;
 
   // Re-resolve localized text each render so the HUD follows language toggles
-  const objKey = `obj_${current.id}`;
-  const raw = (t as unknown as (k: string) => { title: string; desc: string })(objKey);
-  const title = raw && raw.title ? raw.title : current.title;
-  const desc = raw && raw.desc ? raw.desc : current.description;
+  const objText = tObj(`obj_${current.id}`);
+  const title = objText.title || current.title;
+  const desc = objText.desc || current.description;
 
   return (
     <div className="objective-hud" style={styles.container}>

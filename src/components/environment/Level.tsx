@@ -12,9 +12,9 @@ import {
 import { Door } from './Door';
 import { FuseBox, PickupItem } from './FuseBox';
 import { dzSound } from '../AudioManager';
-import { ObjectiveSystem, ObjectiveHUD } from './ObjectiveSystem';
+import { ObjectiveSystem } from './ObjectiveSystem';
 import { Wall, StaticBlock, registerCollider } from './collision';
-import { ModelAsset, preloadModels, MODEL_URLS } from './ModelAsset';
+import { ModelAsset, preloadModels } from './ModelAsset';
 
 // Level configurations
 export const levelConfigs: Record<string, {

@@ -1,11 +1,12 @@
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
-import { t } from '../../utils/i18n';
+import { t, tObj } from '../../utils/i18n';
 import { dzSound } from '../AudioManager';
 import { ambientEvents } from './CyberDecor';
+import type { ItemType } from '../../types/game';
 import { colliders, type BoxCollider } from './collision';
 
 interface DoorProps {
@@ -36,16 +37,13 @@ export function Door({
   position, 
   rotation = [0, 0, 0],
   type, 
-  leadsTo, 
   size = [2.5, 3.5],
   initiallyLocked = true 
 }: DoorProps) {
-  const { scene } = useThree();
   const { 
     hasItem, 
     completeObjective, 
     completedObjectives,
-    currentLevel,
     setInteractionPrompt 
   } = useGameStore();
   
@@ -128,14 +126,14 @@ export function Door({
       } else {
         setInteractionPrompt({
           title: t('interact_locked'),
-          description: t('obj_unlock_emergency').desc,
+          description: tObj('obj_unlock_emergency').desc,
         });
         playDenySound();
         return false;
       }
     }
     
-    if (hasItem(req.item)) {
+    if (hasItem(req.item as ItemType)) {
       setLocked(false);
       state.targetProgress = 1; // Auto-open after unlock
       completeObjective(req.objectiveId);

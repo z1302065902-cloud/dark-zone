@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import { RigidBody, CapsuleCollider, RapierRigidBody } from '@react-three/rapier';
+import { RigidBody, CapsuleCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
 import { resolvePlayerCollision } from '../environment/collision';
 import { emitNoise } from '../enemy/Enemy';
@@ -13,13 +13,11 @@ interface PlayerProps {
 }
 
 export function Player({ children }: PlayerProps) {
-  const { camera, gl, scene, raycaster, mouse, size } = useThree();
+  const { camera, gl, scene } = useThree();
   const gameState = useGameStore((s) => s.gameState);
-  const health = useGameStore((s) => s.health);
   const stamina = useGameStore((s) => s.stamina);
   const restoreStamina = useGameStore((s) => s.restoreStamina);
   const useStamina = useGameStore((s) => s.useStamina);
-  const takeDamage = useGameStore((s) => s.takeDamage);
 
   // Movement state
   const velocity = useRef(new THREE.Vector3());
@@ -47,7 +45,6 @@ export function Player({ children }: PlayerProps) {
   const GRAVITY = -28;
   const DRAG = 0.85;
   const CAMERA_HEIGHT = 1.6;
-  const CROUCH_HEIGHT = 1.0;
 
   // Pointer lock handling
   useEffect(() => {
@@ -109,7 +106,7 @@ export function Player({ children }: PlayerProps) {
   }, [gameState, gl.domElement]);
 
   // Physics-based movement using Rapier
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (gameState !== 'playing') return;
 
     // Clamp delta to avoid tunneling through thin walls on very low FPS
@@ -203,7 +200,7 @@ export function Player({ children }: PlayerProps) {
 
   return (
     <RigidBody
-      type="kinematicPositionBased"
+      type="kinematicPosition"
       position={[0, CAMERA_HEIGHT, 0]}
     >
       <CapsuleCollider args={[0.9, 0.4]} />
@@ -217,12 +214,17 @@ export function useHeadBob(camera: THREE.Camera, enabled: boolean = true) {
   const bobPhase = useRef(0);
   const bobIntensity = 0.02;
   const bobSpeed = 8;
+  const prevPos = useRef({ x: 0, z: 0 });
 
   useFrame((_, delta) => {
     if (!enabled) return;
-    
-    const { velocity } = useGameStore.getState();
-    const speed = Math.sqrt(velocity.x ** 2 + velocity.current.z ** 2);
+
+    // Estimate speed from player-position delta (GameStore has no velocity field)
+    const { playerPosition } = useGameStore.getState();
+    const dx = playerPosition.x - prevPos.current.x;
+    const dz = playerPosition.z - prevPos.current.z;
+    const speed = Math.sqrt(dx * dx + dz * dz) / Math.max(delta, 0.001);
+    prevPos.current = { x: playerPosition.x, z: playerPosition.z };
     
     // Noisy movement — sprinting makes noise nearby enemies can hear
     const noiseTimer = __noiseTimerRef || 0;

@@ -1,9 +1,10 @@
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useRef, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
+import type { ReactNode } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useGameStore } from '../../stores/gameStore';
-import { t } from '../../utils/i18n';
+import { t, tObj } from '../../utils/i18n';
 import { dzSound } from '../AudioManager';
 import { ambientEvents } from './CyberDecor';
 
@@ -22,14 +23,12 @@ export function FuseBox({
   requiredFuses = 1,
   onComplete 
 }: FuseBoxProps) {
-  const { scene } = useThree();
   const { hasItem, removeItem, completeObjective, setInteractionPrompt, completedObjectives } = useGameStore();
   
   const boxRef = useRef<THREE.Group | null>(null);
   const screenRef = useRef<THREE.Mesh | null>(null);
-  const fuseSlotsRef = useRef<THREE.Mesh[]>([]);
   const lightRef = useRef<THREE.PointLight[]>([]);
-  const humRef = useRef<AudioBufferSourceNode | null>(null);
+  const humRef = useRef<OscillatorNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   
   const [insertedCount, setInsertedCount] = useState(0);
@@ -93,15 +92,15 @@ export function FuseBox({
         onComplete?.(boxId);
         
         setInteractionPrompt({
-          title: t('obj_restore_power').title,
-          description: t('obj_door_surgery').desc,
+          title: tObj('obj_restore_power').title,
+          description: tObj('obj_door_surgery').desc,
         });
         
         // Trigger power restored event
         setTimeout(() => setInteractionPrompt(null), 4000);
       } else {
         setInteractionPrompt({
-          title: t('obj_insert_fuse').title,
+          title: tObj('obj_insert_fuse').title,
           description: t('fuse_needed', requiredFuses - insertedCount),
         });
         setTimeout(() => setInteractionPrompt(null), 2000);
@@ -109,7 +108,7 @@ export function FuseBox({
     } else {
       setInteractionPrompt({
         title: t('fuse_box'),
-        description: t('obj_find_fuse').desc,
+        description: tObj('obj_find_fuse').desc,
       });
       playDenySound();
       setInteractionCooldown(30);
@@ -244,7 +243,7 @@ export function FuseBox({
             )}
             {/* Slot light */}
             <pointLight 
-              ref={el => { lightRef.current[i] = el; }} 
+              ref={el => { if (el) lightRef.current[i] = el; }} 
               position={[0, 0.15, 0]} 
               color={insertedCount > i ? 0x00ff88 : 0xff2222} 
               intensity={insertedCount > i ? 8 : 3} 
@@ -310,7 +309,7 @@ interface PickupProps {
 }
 
 export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup }: PickupProps) {
-  const { addItem, setInteractionPrompt, completedObjectives } = useGameStore();
+  const { addItem, setInteractionPrompt } = useGameStore();
   const meshRef = useRef<THREE.Mesh | null>(null);
   const lightRef = useRef<THREE.PointLight | null>(null);
   const picked = useRef(false);
@@ -318,7 +317,7 @@ export function PickupItem({ itemType, position, rotation = [0, 0, 0], onPickup 
   // Check if already picked up in this session (simple approach)
   // In full game, would track per-item in save
   
-  const configs: Record<string, { color: number; name: string; objId: string; model: () => JSX.Element }> = {
+  const configs: Record<string, { color: number; name: string; objId: string; model: () => ReactNode }> = {
     keycard: { 
       color: 0x00e5ff, 
       name: t('item_keycard'), 
@@ -496,6 +495,6 @@ function completeObjective(id: string) {
   useGameStore.getState().completeObjective(id);
 }
 
-function playPickupSound(color: number) {
+function playPickupSound(_color: number) {
   dzSound.pickup();
 }

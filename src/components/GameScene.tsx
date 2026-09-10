@@ -12,8 +12,6 @@ import { useGameStore } from '../stores/gameStore';
 export function GameScene() {
   const gameState = useGameStore((s) => s.gameState);
   const currentLevel = useGameStore((s) => s.currentLevel);
-  const playerPosition = useGameStore((s) => s.playerPosition);
-  const playerRotation = useGameStore((s) => s.playerRotation);
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition);
   const setPlayerRotation = useGameStore((s) => s.setPlayerRotation);
 

@@ -131,10 +131,9 @@ const HIP_SPREAD = 0.008;  // radians — hip-fire spread
 const ADS_SPREAD = 0.0015; // radians — aimed spread
 
 export function WeaponSystem() {
-  const { camera, scene, raycaster, gl } = useThree();
+  const { camera, scene, raycaster } = useThree();
   const gameState = useGameStore((s) => s.gameState);
   const currentWeapon = useGameStore((s) => s.currentWeapon);
-  const ammo = useGameStore((s) => s.ammo);
   const useAmmo = useGameStore((s) => s.useAmmo);
   const setCurrentWeapon = useGameStore((s) => s.setCurrentWeapon);
   const setHitMarker = useGameStore((s) => s.setHitMarker);
@@ -162,7 +161,7 @@ export function WeaponSystem() {
     light.visible = false;
     muzzleFlashRef.current = light;
     camera.add(light);
-    return () => camera.remove(light);
+    return () => { camera.remove(light); };
   }, [camera]);
 
   // Input handling
@@ -190,7 +189,7 @@ export function WeaponSystem() {
     window.addEventListener('keydown', onKeyDown);
     const onFireWeapon = (e: Event) => {
       const detail = (e as CustomEvent).detail as { weapon?: string } | null;
-      if (detail?.weapon) setCurrentWeapon(detail.weapon);
+      if (detail?.weapon) setCurrentWeapon(detail.weapon as WeaponType);
       // Fire synchronously so E2E/debug bridge calls work even when the
       // headless RAF loop isn't ticking. fireRef always holds the latest fire().
       fireRef.current();

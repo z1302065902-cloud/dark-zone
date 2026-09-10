@@ -436,9 +436,6 @@ export function AudioManager() {
     const speed = pos.distanceTo(prevPos);
     (camera as any)._prevPos = pos.clone();
 
-    const store = useGameStore.getState();
-    const stamina = store.stamina;
-
     // Footsteps when moving
     if (speed > 0.01) {
       const now = performance.now();

@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { useGameStore } from '../../stores/gameStore';
 
 export function Flashlight() {
-  const { camera, scene } = useThree();
-  const { flashlightOn, flashlightBattery, drainFlashlightBattery, maxFlashlightBattery } = useGameStore.getState();
+  const { camera } = useThree();
+  const { maxFlashlightBattery } = useGameStore.getState();
   const drainBattery = useGameStore((s) => s.drainFlashlightBattery);
   const toggleFlashlight = useGameStore((s) => s.toggleFlashlight);
 
@@ -67,7 +67,7 @@ export function Flashlight() {
     ctx.fillRect(0, 0, cookieSize, cookieSize);
     
     const cookieTexture = new THREE.CanvasTexture(cookieCanvas);
-    light.cookie = cookieTexture;
+    (light as unknown as { cookie?: THREE.Texture }).cookie = cookieTexture;
 
     return () => {
       camera.remove(light);

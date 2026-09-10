@@ -13,7 +13,8 @@ export function setLang(lang: Lang) {
 }
 export function getLang(): Lang { return currentLang; }
 
-type Dict = Record<string, string | ((...a: unknown[]) => string)>;
+type DictValue = string | ((...args: any[]) => string) | { title: string; desc: string };
+type Dict = Record<string, DictValue>;
 
 const ZH: Dict = {
   // Menu
@@ -253,6 +254,16 @@ export function t(key: string, ...args: unknown[]): string {
   if (raw === undefined) return key;
   if (typeof raw === 'function') return (raw as (...a: unknown[]) => string)(...args);
   return raw as string;
+}
+
+/** Object-typed translations ({ title, desc }) used for objectives/prompts. */
+export function tObj(key: string): { title: string; desc: string } {
+  const raw = DICT[currentLang][key] as unknown;
+  if (raw && typeof raw === 'object') {
+    const o = raw as { title?: string; desc?: string };
+    return { title: o.title ?? key, desc: o.desc ?? '' };
+  }
+  return { title: key, desc: '' };
 }
 
 export function getCurrentLang(): Lang { return currentLang; }

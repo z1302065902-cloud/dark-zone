@@ -29,15 +29,10 @@ interface Interactable {
 export function InteractionSystem() {
   const { camera, scene } = useThree();
   const gameState = useGameStore((s) => s.gameState);
-  const addWeapon = useGameStore((s) => s.addWeapon);
-  const addItem = useGameStore((s) => s.addItem);
   const hasItem = useGameStore((s) => s.hasItem);
-  const currentItem = useGameStore((s) => s.currentItem);
-  const setCurrentItem = useGameStore((s) => s.setCurrentItem);
   const setInteractionPrompt = useGameStore((s) => s.setInteractionPrompt);
 
   const interactablesRef = useRef<Interactable[]>([]);
-  const hitRef = useRef<THREE.Ray | null>(null);
   const canInteract = useRef(false);
 
   // Register interactables (would normally be in level setup)
@@ -204,8 +199,8 @@ export function Door({
         </mesh>
         
         {/* Handle */}
-        <mesh position={[0.7, 1.5, 0.06]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.15, 8]} rotation={[0, 0, Math.PI/2]} />
+        <mesh position={[0.7, 1.5, 0.06]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.15, 8]} />
           <meshStandardMaterial color={0x444444} roughness={0.3} metalness={0.7} />
         </mesh>
         
@@ -250,6 +245,7 @@ export function Pickup({
   const [collected, setCollected] = useState(false);
   const pickupRef = useRef<THREE.Group>(null);
   const floatOffset = useRef(Math.random() * Math.PI * 2);
+  const addItem = useGameStore((s) => s.addItem);
 
   const interact = useCallback(() => {
     if (collected) return;
@@ -323,6 +319,7 @@ function getItemColor(type: ItemType): THREE.ColorRepresentation {
     flashlight: 0xffff00,
     battery: 0x00ff00,
     medkit: 0xff0000,
+    master_key: 0xcc00ff,
     painkiller: 0xff00ff,
     key: 0xffaa00,
     keycard: 0x00aaff,

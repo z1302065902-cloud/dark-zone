@@ -286,7 +286,7 @@ export const useGameStore = create<GameStore>()(
       }),
       setBossHealth: (health) => set({ bossHealth: health }),
 
-      fireWeapon: (weapon) => {
+      fireWeapon: (weapon?: WeaponType) => {
         // Trigger weapon fire via the WeaponSystem component
         // We dispatch a custom event that WeaponSystem listens to
         window.dispatchEvent(new CustomEvent('dz:fire-weapon', { detail: { weapon } }));
